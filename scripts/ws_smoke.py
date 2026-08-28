@@ -1,0 +1,58 @@
+"""End-to-end smoke test for a running Algo Visualizer server.
+
+Usage:
+    python scripts/ws_smoke.py [ws://host:port/ws]
+
+Default is ws://127.0.0.1:8080/ws (local dev). Point it at your hosted
+Replit URL to validate the deployed WebSocket, e.g.:
+    python scripts/ws_smoke.py wss://your-app.replit.app/ws
+"""
+
+import asyncio
+import json
+import sys
+
+import websockets
+
+DEFAULT = "ws://127.0.0.1:8080/ws"
+
+HAPPY = {
+    "action": "sort",
+    "algorithm": "quick_sort",
+    "array": [3, 1, 2, 8, 5, 7, 4, 6],
+    "request_id": 42,
+}
+
+
+async def main(url):
+    async with websockets.connect(url) as ws:
+        # 1. happy path
+        await ws.send(json.dumps(HAPPY))
+        msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
+        frames = msg.get("frames", [])
+        print("happy.type:", msg.get("type"))
+        print("happy.request_id:", msg.get("request_id"))
+        print("happy.frames:", len(frames))
+        print("happy.last_array:", frames[-1]["array"] if frames else None)
+        print("happy.stats:", msg.get("stats"))
+        assert msg["request_id"] == 42
+        assert frames and frames[-1]["array"] == sorted(HAPPY["array"])
+
+        # 2. ping
+        await ws.send(json.dumps({"action": "ping"}))
+        pong = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
+        print("ping.type:", pong.get("type"))
+        assert pong["type"] == "pong"
+
+        # 3. error path
+        await ws.send(json.dumps({"action": "sort", "algorithm": "nope", "array": [1, 2]}))
+        err = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
+        print("err.type:", err.get("type"))
+        print("err.message:", err.get("message"))
+        assert err["type"] == "error"
+
+    print("WS SMOKE OK")
+
+
+if __name__ == "__main__":
+    asyncio.run(main(sys.argv[1] if len(sys.argv) > 1 else DEFAULT))

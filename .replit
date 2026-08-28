@@ -1,0 +1,17 @@
+# Replit app configuration.
+#
+# The app is a single FastAPI/uvicorn process that serves the static frontend
+# plus the /api and /ws endpoints. It must bind to 0.0.0.0 so Replit can route
+# external traffic to it; the [[ports]] block forwards external :80 to the
+# internal 8080 (see https://docs.replit.com/features/project-setup/ports).
+
+entrypoint = "main.py"
+run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+
+[deployment]
+run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 8080
+externalPort = 80

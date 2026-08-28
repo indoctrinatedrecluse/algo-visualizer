@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algo Visualizer</title>
+  <link rel="stylesheet" href="/static/vendor/prism/prism-tomorrow.min.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <h1>Algo Visualizer</h1>
+
+    <div class="group">
+      <label for="algorithm-select">Algorithm</label>
+      <select id="algorithm-select"></select>
+    </div>
+
+    <div class="group">
+      <label for="size-slider">Size <span id="size-label">30</span></label>
+      <input type="range" id="size-slider" min="5" max="100" value="30" />
+    </div>
+
+    <button id="randomize-btn" title="New random array">Shuffle</button>
+    <button id="sort-btn" class="primary" title="Run the selected algorithm">Sort</button>
+
+    <div class="divider"></div>
+
+    <button id="play-btn" title="Play / pause (Space)">▶ Play</button>
+    <button id="step-back-btn" title="Step backward (←)">⏮ Step</button>
+    <button id="step-fwd-btn" title="Step forward (→)">Step ⏭</button>
+    <button id="skip-end-btn" title="Jump to the end">Skip End</button>
+
+    <div class="divider"></div>
+
+    <div class="group">
+      <label for="speed-slider">Speed <span id="speed-label">30</span></label>
+      <input type="range" id="speed-slider" min="1" max="300" value="30" />
+    </div>
+  </header>
+
+  <section id="algo-info">
+    <span id="algo-name">—</span>
+    <span id="algo-complexity"></span>
+    <span id="algo-desc"></span>
+  </section>
+
+  <section id="status-bar">
+    <span id="status-msg">Ready. Pick an algorithm and press Sort.</span>
+    <span id="stats">
+      Steps: <b id="stat-steps">0</b> ·
+      Compares: <b id="stat-compares">0</b> ·
+      Swaps: <b id="stat-swaps">0</b>
+    </span>
+  </section>
+
+  <main id="panels">
+    <section id="viz-panel">
+      <canvas id="viz-canvas"></canvas>
+    </section>
+    <aside id="code-panel">
+      <div id="code-header">Source · Python</div>
+      <pre id="code-block"></pre>
+    </aside>
+  </main>
+
+  <script src="/static/vendor/prism/prism.min.js"></script>
+  <script src="/static/vendor/prism/prism-python.min.js"></script>
+  <script type="module" src="/static/js/main.js"></script>
+</body>
+</html>
