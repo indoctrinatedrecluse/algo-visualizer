@@ -32,14 +32,21 @@ const els = {
   statCompares: document.getElementById("stat-compares"),
   statSwaps: document.getElementById("stat-swaps"),
   treeBox: document.getElementById("tree-box"),
+  targetInput: document.getElementById("target-input"),
+  targetGroup: document.getElementById("target-group"),
+  targetChip: document.getElementById("target-chip"),
 };
 
 let currentArray = [];
 let requestId = 0;
 let sortInFlight = false;
+let algoMeta = {};        // name -> metadata from /api/algorithms
+let currentAlgo = null;   // metadata of the selected algorithm
+let currentTarget = null; // search target value
 
 // ---- Playback engine -----------------------------------------------------
 const player = new Player((frame, prev, progress, sortedFlags) => {
+  arrayRenderer.setTarget(currentTarget);
   arrayRenderer.render(frame, prev, progress, sortedFlags);
   barRenderer.render(frame, prev, progress, sortedFlags);
   if (treeVisible()) treeRenderer.render(player.frames, player.index, sortedFlags);
@@ -57,7 +64,10 @@ const player = new Player((frame, prev, progress, sortedFlags) => {
 });
 
 player.onEnd = () => {
-  els.status.textContent = "Sorting complete ✓";
+  const last = player.frames[player.index];
+  els.status.textContent = currentAlgo?.category === "searching"
+    ? (last?.type === "found" ? "Target found ✓" : "Target not found")
+    : "Sorting complete ✓";
   els.play.textContent = "▶ Play";
 };
 
@@ -72,6 +82,7 @@ function treeVisible() {
 function renderIdle() {
   const frame = { array: currentArray, indices: [], type: "idle", line: null, message: "" };
   const empty = new Set();
+  arrayRenderer.setTarget(currentTarget);
   arrayRenderer.render(frame, null, 1, empty);
   barRenderer.render(frame, null, 1, empty);
   treeRenderer.render([], -1, empty);
@@ -100,6 +111,7 @@ function randomize() {
   setPlayLabel();
   renderIdle();
   codePanel.highlight(null);
+  updateTargetChip();
   els.status.textContent = `${n} elements — press Sort to run the algorithm`;
   els.statSteps.textContent = "0";
   els.statCompares.textContent = "0";
@@ -110,19 +122,40 @@ function randomize() {
 function renderDescription(detail) {
   els.algoName.textContent = detail.display_name;
   const c = detail.complexity;
+  const stability = detail.category === "searching"
+    ? ""
+    : ` · ${detail.stable ? "Stable" : "Unstable"}`;
   els.algoComplexity.textContent =
-    `Best ${c.best} · Avg ${c.average} · Worst ${c.worst} · Space ${c.space} · ` +
-    (detail.stable ? "Stable" : "Unstable");
+    `Best ${c.best} · Avg ${c.average} · Worst ${c.worst} · Space ${c.space}${stability}`;
   els.algoComplexity.title = "Time / space complexity";
   els.algoDesc.textContent = detail.description;
+}
+
+function updateTargetChip() {
+  const isSearch = currentAlgo && currentAlgo.category === "searching";
+  if (isSearch) {
+    const v = Number(els.targetInput.value);
+    currentTarget = Number.isNaN(v) ? null : v;
+    els.targetChip.textContent = currentTarget == null
+      ? "Target: –"
+      : `Target: ${currentTarget}`;
+    els.targetChip.classList.remove("hidden");
+  } else {
+    currentTarget = null;
+    els.targetChip.classList.add("hidden");
+  }
 }
 
 async function loadAlgorithm(name) {
   const detail = await api.getAlgorithm(name);
   codePanel.setSource(detail.source, detail.start_line);
   renderDescription(detail);
+  currentAlgo = { ...detail, ...(algoMeta[name] || {}) };
   const showTree = detail.name === "quick_sort";
   els.treeBox.classList.toggle("hidden", !showTree);
+  const isSearch = detail.category === "searching";
+  els.targetGroup.classList.toggle("hidden", !isSearch);
+  updateTargetChip();
   resizeViews();
 }
 
@@ -131,14 +164,37 @@ function startSort() {
   if (sortInFlight) return;
   if (currentArray.length === 0) return;
 
+  const algo = currentAlgo || {};
+  let arr = currentArray;
+  let target;
+
+  // Searching algorithms that require sorted input sort a copy first.
+  if (algo.needs_sorted_input) {
+    arr = [...currentArray].sort((a, b) => a - b);
+    currentArray = arr;
+    renderIdle();
+  }
+
+  if (algo.category === "searching") {
+    updateTargetChip();
+    if (currentTarget == null) {
+      els.status.textContent = "Enter a valid target value.";
+      return;
+    }
+    target = currentTarget;
+  }
+
   sortInFlight = true;
   els.sort.disabled = true;
   els.sort.textContent = "Sorting…";
   player.pause();
   setPlayLabel();
+  els.status.textContent = algo.needs_sorted_input
+    ? "Array sorted — searching…"
+    : `Running ${algo.display_name}…`;
 
   const myId = ++requestId;
-  api.requestSort(els.algoSelect.value, currentArray, myId).catch((err) => {
+  api.requestSort(els.algoSelect.value, arr, myId, target).catch((err) => {
     sortInFlight = false;
     els.sort.disabled = false;
     els.sort.textContent = "Sort";
@@ -151,6 +207,12 @@ api.onResult = (msg) => {
   sortInFlight = false;
   els.sort.disabled = false;
   els.sort.textContent = "Sort";
+
+  if (msg.category === "searching" && msg.target != null) {
+    currentTarget = msg.target;
+    els.targetChip.textContent = `Target: ${currentTarget}`;
+    els.targetChip.classList.remove("hidden");
+  }
 
   if (!msg.frames || !msg.frames.length) {
     els.status.textContent = "No steps produced.";
@@ -197,6 +259,10 @@ function wireControls() {
     randomize();
   });
 
+  els.targetInput.addEventListener("input", () => {
+    updateTargetChip();
+  });
+
   els.sort.addEventListener("click", startSort);
   els.play.addEventListener("click", togglePlay);
   els.stepBack.addEventListener("click", () => { player.stepBack(); setPlayLabel(); });
@@ -221,12 +287,22 @@ function wireControls() {
 // ---- Init ----------------------------------------------------------------
 async function init() {
   const algorithms = await api.getAlgorithms();
-  for (const a of algorithms) {
-    const opt = document.createElement("option");
-    opt.value = a.name;
-    opt.textContent = a.display_name;
-    els.algoSelect.appendChild(opt);
+  for (const a of algorithms) algoMeta[a.name] = a;
+
+  for (const cat of ["sorting", "searching"]) {
+    const group = algorithms.filter((a) => a.category === cat);
+    if (!group.length) continue;
+    const optGroup = document.createElement("optgroup");
+    optGroup.label = cat === "sorting" ? "Sorting" : "Searching";
+    for (const a of group) {
+      const opt = document.createElement("option");
+      opt.value = a.name;
+      opt.textContent = a.display_name;
+      optGroup.appendChild(opt);
+    }
+    els.algoSelect.appendChild(optGroup);
   }
+
   await loadAlgorithm(algorithms[0].name);
   wireControls();
   player.setSpeed(Number(els.speedSlider.value));

@@ -50,7 +50,28 @@ async def main(url):
         print("ping.type:", pong.get("type"))
         assert pong["type"] == "pong"
 
-        # 3. error path
+        # 3. binary search round-trip (searching category + target)
+        await ws.send(json.dumps({
+            "action": "sort",
+            "algorithm": "binary_search",
+            "array": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+            "target": 14,
+            "request_id": 43,
+        }))
+        bmsg = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
+        bframes = bmsg.get("frames", [])
+        print("binary.type:", bmsg.get("type"))
+        print("binary.category:", bmsg.get("category"))
+        print("binary.target:", bmsg.get("target"))
+        print("binary.last:", bframes[-1] if bframes else None)
+        assert bmsg["type"] == "result"
+        assert bmsg["category"] == "searching"
+        assert bmsg["target"] == 14
+        assert bframes[-1]["type"] == "found"
+        assert bframes[-1]["indices"] == [6]
+        assert any(f["type"] == "range" for f in bframes)
+
+        # 4. error path
         await ws.send(json.dumps({"action": "sort", "algorithm": "nope", "array": [1, 2]}))
         err = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
         print("err.type:", err.get("type"))

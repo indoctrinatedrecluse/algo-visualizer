@@ -59,10 +59,10 @@ export class APIClient {
     return this._connecting;
   }
 
-  async requestSort(algorithm, array, requestId) {
+  async requestSort(algorithm, array, requestId, target) {
     await this.connect();
-    this.ws.send(
-      JSON.stringify({ action: "sort", algorithm, array, request_id: requestId })
-    );
+    const msg = { action: "sort", algorithm, array, request_id: requestId };
+    if (target !== undefined && target !== null) msg.target = target;
+    this.ws.send(JSON.stringify(msg));
   }
 }

@@ -58,7 +58,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json({"type": "pong"})
             elif action == "sort":
                 try:
-                    result = engine.run_sort(message["algorithm"], message["array"])
+                    result = engine.run_sort(
+                        message["algorithm"],
+                        message["array"],
+                        message.get("target"),
+                    )
                     result["request_id"] = message.get("request_id")
                     await websocket.send_json({"type": "result", **result})
                 except (ValueError, KeyError, TypeError) as exc:

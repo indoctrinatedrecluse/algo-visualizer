@@ -21,6 +21,11 @@
       <input type="range" id="size-slider" min="5" max="100" value="15" />
     </div>
 
+    <div class="group hidden" id="target-group">
+      <label for="target-input">Target</label>
+      <input type="number" id="target-input" min="0" max="200" step="1" value="15" />
+    </div>
+
     <button id="randomize-btn" title="New random array">Shuffle</button>
     <button id="sort-btn" class="primary" title="Run the selected algorithm">Sort</button>
 
@@ -47,6 +52,7 @@
 
   <section id="status-bar">
     <span id="status-msg">Ready. Pick an algorithm and press Sort.</span>
+    <span id="target-chip" class="hidden"></span>
     <span id="stats">
       Steps: <b id="stat-steps">0</b> ·
       Compares: <b id="stat-compares">0</b> ·

@@ -100,6 +100,8 @@ tests/test_engine.py     engine correctness + line-mapping tests
 - [x] Array (boxes-with-numbers) view with slide animations + bars overview
 - [x] Optimized quick sort (median-of-three + insertion cutoff) with a
       dedicated recursion-tree view showing partitions and pivots
+- [x] Linear + binary search with a target input, search-range markers,
+      found/not-found steps, and auto-sorting for binary search
 - [ ] True `sys.settrace` live-tracing mode
 - [ ] More algorithms (heap sort, radix sort, Bogo sort…)
 - [ ] Dual/auxiliary-array visualization for merge sort

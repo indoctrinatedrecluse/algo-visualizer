@@ -158,6 +158,19 @@ html, body {
 #tree-box { flex: 2 1 0; }
 #bars-box { flex: 1 1 0; }
 #tree-box.hidden { display: none; }
+.hidden { display: none !important; }
+
+#target-input { width: 70px; }
+
+#target-chip {
+  background: rgba(255, 159, 67, 0.12);
+  color: #ff9f43;
+  border: 1px solid rgba(255, 159, 67, 0.4);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
 
 .viz-header {
   padding: 6px 12px;

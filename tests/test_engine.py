@@ -11,7 +11,10 @@ import random
 import pytest
 
 import engine
-from sorting import ALGORITHMS
+from registry import ALGORITHMS
+
+SORTING_ALGORITHMS = sorted(i.name for i in ALGORITHMS.values() if i.category == "sorting")
+SEARCHING_ALGORITHMS = sorted(i.name for i in ALGORITHMS.values() if i.category == "searching")
 
 # Deterministic-ish arrays covering edge cases (sorted, reverse, dupes, small).
 TEST_ARRAYS = [
@@ -25,7 +28,7 @@ TEST_ARRAYS = [
 ]
 
 
-@pytest.mark.parametrize("name", sorted(ALGORITHMS))
+@pytest.mark.parametrize("name", SORTING_ALGORITHMS)
 def test_sorts_correctly(name):
     for arr in TEST_ARRAYS:
         result = engine.run_sort(name, arr)
@@ -39,7 +42,7 @@ def test_sorts_correctly(name):
         assert result["stats"]["swaps"] >= 0
 
 
-@pytest.mark.parametrize("name", sorted(ALGORITHMS))
+@pytest.mark.parametrize("name", SORTING_ALGORITHMS)
 def test_frames_never_introduce_new_values(name):
     """Intermediate frames keep the input length and reuse only input values.
 
@@ -67,7 +70,8 @@ def test_line_numbers_map_into_source(name):
     start = detail["start_line"]
     source_lines = detail["source"].splitlines()
     arr = TEST_ARRAYS[6]
-    result = engine.run_sort(name, arr)
+    target = arr[0] if detail["category"] == "searching" else None
+    result = engine.run_sort(name, arr, target)
     assert result["frames"], f"{name} produced no frames"
     for frame in result["frames"]:
         rel = frame["line"] - start
@@ -139,3 +143,62 @@ def test_quick_sort_marks_every_element_sorted():
         if f["type"] == "sorted":
             marked.update(f["indices"])
     assert marked == set(range(len(arr))), "every index should be marked sorted"
+
+
+# ---------------------------------------------------------------------------
+# Searching algorithms
+# ---------------------------------------------------------------------------
+
+def test_linear_search_finds():
+    arr = [4, 2, 9, 1, 7]
+    result = engine.run_sort("linear_search", arr, 9)
+    assert result["frames"][-1]["type"] == "found"
+    assert result["frames"][-1]["indices"] == [2]
+    assert result["category"] == "searching"
+    assert result["target"] == 9
+
+
+def test_linear_search_missing():
+    result = engine.run_sort("linear_search", [4, 2, 9], 99)
+    assert result["frames"][-1]["type"] == "not_found"
+
+
+def test_search_does_not_mutate_array():
+    """Searching algorithms never change the array (all frames identical)."""
+    arr = [8, 2, 5, 1, 9, 3]
+    result = engine.run_sort("linear_search", arr, 5)
+    for frame in result["frames"]:
+        assert frame["array"] == arr
+
+
+def test_binary_search_finds():
+    arr = [1, 3, 5, 7, 9, 11, 13]
+    result = engine.run_sort("binary_search", arr, 9)
+    assert result["frames"][-1]["type"] == "found"
+    assert result["frames"][-1]["indices"] == [4]
+    # Range frames drive the search-range visualization.
+    range_frames = [f for f in result["frames"] if f["type"] == "range"]
+    assert range_frames, "binary search should emit range frames"
+    for f in range_frames:
+        assert len(f["range"]) == 2
+
+
+def test_binary_search_missing():
+    result = engine.run_sort("binary_search", [1, 3, 5, 7, 9], 4)
+    assert result["frames"][-1]["type"] == "not_found"
+
+
+def test_search_target_required():
+    with pytest.raises(ValueError):
+        engine.run_sort("binary_search", [1, 2, 3])
+
+
+def test_search_metadata_fields():
+    meta = {a["name"]: a for a in engine.list_algorithms()}
+    assert meta["linear_search"]["category"] == "searching"
+    assert meta["linear_search"]["needs_sorted_input"] is False
+    assert meta["binary_search"]["needs_sorted_input"] is True
+    assert meta["bubble_sort"]["category"] == "sorting"
+    detail = engine.get_algorithm_detail("binary_search")
+    assert detail["category"] == "searching"
+    assert detail["needs_sorted_input"] is True

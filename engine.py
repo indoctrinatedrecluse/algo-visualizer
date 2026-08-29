@@ -1,4 +1,5 @@
-"""Runs a sorting algorithm generator and records every step as a frame.
+"""Runs an algorithm generator (sorting or searching) and records every step
+as a frame.
 
 A *frame* is a full snapshot of the array plus the metadata needed to drive
 both the canvas visualization and the synchronized code highlight::
@@ -9,12 +10,14 @@ both the canvas visualization and the synchronized code highlight::
         "indices": [2, 5],    # positions to highlight
         "type": "swap",       # compare | swap | mark | sorted | done
                              #   | pivot | range | partition
+                             #   | found | not_found
         "message": "Swap 8 and 3",
     }
 
 Quick sort adds two optional fields for the recursion-tree view:
 ``range`` ([lo, hi] of the active subarray) and ``children`` (the two
-subranges produced by a partition).
+subranges produced by a partition).  Binary search uses ``range`` for the
+active search range; searching algorithms accept a ``target`` value.
 """
 
 from __future__ import annotations
@@ -22,17 +25,25 @@ from __future__ import annotations
 import inspect
 from typing import Any
 
-from sorting import ALGORITHMS
+from registry import ALGORITHMS, SEARCHING
+
+# Import both packages so all algorithms register themselves.
+import searching  # noqa: F401
+import sorting  # noqa: F401
 
 # Hard safety cap so a single WebSocket message cannot exhaust the server.
 MAX_ELEMENTS = 400
 
 
-def run_sort(algorithm: str, array: list) -> dict[str, Any]:
+def run_sort(algorithm: str, array: list, target: Any = None) -> dict[str, Any]:
     """Execute ``algorithm`` on a copy of ``array``; return frames + stats.
 
+    ``target`` is required for searching algorithms (``category == searching``)
+    and ignored otherwise.
+
     Raises:
-        ValueError: unknown algorithm, empty array, or array too large.
+        ValueError: unknown algorithm, empty array, oversized array, or a
+            searching algorithm called without a target.
     """
     if algorithm not in ALGORITHMS:
         raise ValueError(f"Unknown algorithm: {algorithm!r}")
@@ -43,7 +54,15 @@ def run_sort(algorithm: str, array: list) -> dict[str, Any]:
     if len(arr) > MAX_ELEMENTS:
         raise ValueError(f"Array too large: {len(arr)} elements (max {MAX_ELEMENTS})")
 
-    gen = ALGORITHMS[algorithm].fn(arr)
+    info = ALGORITHMS[algorithm]
+    if info.category == SEARCHING:
+        if target is None:
+            raise ValueError(f"{info.display_name} requires a target value")
+        target = int(target)
+        gen = info.fn(arr, target)
+    else:
+        target = None
+        gen = info.fn(arr)
 
     frames: list[dict[str, Any]] = []
     comparisons = 0
@@ -87,6 +106,8 @@ def run_sort(algorithm: str, array: list) -> dict[str, Any]:
             "swaps": swaps,
             "steps": len(frames),
         },
+        "category": info.category,
+        "target": target,
     }
 
 
@@ -102,6 +123,8 @@ def list_algorithms() -> list[dict[str, Any]]:
             "worst": info.worst,
             "space": info.space,
             "stable": info.stable,
+            "category": info.category,
+            "needs_sorted_input": info.needs_sorted_input,
         }
         for info in ALGORITHMS.values()
     ]
@@ -128,6 +151,8 @@ def get_algorithm_detail(algorithm: str) -> dict[str, Any]:
             "space": info.space,
         },
         "stable": info.stable,
+        "category": info.category,
+        "needs_sorted_input": info.needs_sorted_input,
         "source": "".join(lines),
         "start_line": start_line,
     }

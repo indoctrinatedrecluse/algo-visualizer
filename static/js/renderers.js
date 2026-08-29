@@ -18,6 +18,7 @@ const COMPARE_COLOR = "#e3b341";
 const MARK_COLOR = "#bc8cff";
 const SORTED_COLOR = "#3fb950";
 const PIVOT_COLOR = "#ff9f43";
+const RANGE_MID_COLOR = "#58a6ff";
 const BASE_FILL = "#1d2536";
 const BASE_STROKE = "#4a5568";
 const TEXT_COLOR = "#e6edf3";
@@ -50,6 +51,8 @@ function slotColor(type, highlighted, sorted) {
   if (type === "compare") return COMPARE_COLOR;
   if (type === "mark") return MARK_COLOR;
   if (type === "pivot") return PIVOT_COLOR;
+  if (type === "range") return RANGE_MID_COLOR;
+  if (type === "found") return SORTED_COLOR;
   return null;
 }
 
@@ -99,6 +102,16 @@ function drawArrow(ctx, x1, x2, y, color) {
   ctx.moveTo(x2, y);
   ctx.lineTo(x2 - head * Math.cos(ang - 0.35), y - head * Math.sin(ang - 0.35));
   ctx.lineTo(x2 - head * Math.cos(ang + 0.35), y - head * Math.sin(ang + 0.35));
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Small upward-pointing triangle used as a lo/hi range marker.
+function chevronUp(ctx, x, y, size) {
+  ctx.beginPath();
+  ctx.moveTo(x - size, y + size);
+  ctx.lineTo(x + size, y + size);
+  ctx.lineTo(x, y - size * 0.4);
   ctx.closePath();
   ctx.fill();
 }
@@ -191,6 +204,11 @@ export class ArrayRenderer {
     this._resize = this.resize.bind(this);
     window.addEventListener("resize", this._resize);
     this.resize();
+    this.target = null;
+  }
+
+  setTarget(value) {
+    this.target = value;
   }
 
   resize() {
@@ -230,7 +248,7 @@ export class ArrayRenderer {
     const showNumbers = boxW >= 30;
     const fontSize = clamp(Math.floor(boxW * 0.4), 11, 22);
 
-    // Active subarray overlay (quick sort: which range is being processed).
+    // Active subarray / search-range overlay (quick sort, binary search).
     if (Array.isArray(curr.range) && curr.range.length === 2) {
       const [rlo, rhi] = curr.range;
       const x0 = slotX(rlo) - gap / 2;
@@ -240,6 +258,10 @@ export class ArrayRenderer {
       ctx.fillStyle = "rgba(88, 166, 255, 0.55)";
       ctx.fillRect(x0, top - 3, 2, boxH + 6);
       ctx.fillRect(x1 - 2, top - 3, 2, boxH + 6);
+      // lo / hi markers below the boxes.
+      ctx.fillStyle = "rgba(88, 166, 255, 0.9)";
+      chevronUp(ctx, slotX(rlo) + boxW / 2, top + boxH + 4, 6);
+      chevronUp(ctx, slotX(rhi) + boxW / 2, top + boxH + 4, 6);
     }
 
     for (let d = 0; d < n; d++) {
@@ -272,6 +294,25 @@ export class ArrayRenderer {
         drawArrow(ctx, x1, x2, Math.max(8, top - 14),
                   type === "swap" ? SWAP_COLOR : COMPARE_COLOR);
       }
+    }
+
+    // Target badge (searching algorithms).
+    if (this.target != null) {
+      const label = `target: ${this.target}`;
+      ctx.font = "11px Consolas, monospace";
+      const tw = Math.round(ctx.measureText(label).width) + 16;
+      const bx = w - tw - 8;
+      const by = 6;
+      ctx.fillStyle = "rgba(22, 27, 34, 0.9)";
+      roundRect(ctx, bx, by, tw, 20, 10);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 159, 67, 0.6)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = "#ff9f43";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, bx + 8, by + 10);
     }
   }
 }
