@@ -14,6 +14,13 @@ import sys
 
 import websockets
 
+# Frame messages contain "✓" which crashes Windows cp1252 consoles when
+# printed. Make stdout robust across platforms.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 DEFAULT = "ws://127.0.0.1:8080/ws"
 
 HAPPY = {

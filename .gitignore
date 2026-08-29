@@ -35,6 +35,9 @@ Thumbs.db
 .env.*
 !.env.example
 
+# ---------- Local personal notes (not part of the repo) ----------
+replit_instructions.md
+
 # ---------- Frontend (if a build step is added later) ----------
 node_modules/
 

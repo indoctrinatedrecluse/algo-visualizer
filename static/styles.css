@@ -161,6 +161,7 @@ html, body {
 .hidden { display: none !important; }
 
 #target-input { width: 70px; }
+#speed-input { width: 64px; }
 
 #target-chip {
   background: rgba(255, 159, 67, 0.12);

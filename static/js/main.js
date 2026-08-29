@@ -24,6 +24,7 @@ const els = {
   skipEnd: document.getElementById("skip-end-btn"),
   speedSlider: document.getElementById("speed-slider"),
   speedLabel: document.getElementById("speed-label"),
+  speedInput: document.getElementById("speed-input"),
   status: document.getElementById("status-msg"),
   algoName: document.getElementById("algo-name"),
   algoComplexity: document.getElementById("algo-complexity"),
@@ -92,6 +93,18 @@ function resizeViews() {
   arrayRenderer.resize();
   barRenderer.resize();
   treeRenderer.resize();
+}
+
+// Apply a speed value (steps/sec) to the slider, the manual input and the
+// player, clamped to the supported range [1, 300].
+function applySpeed(value) {
+  const v = Number(value);
+  if (!Number.isFinite(v)) return;
+  const clamped = Math.min(300, Math.max(1, Math.round(v)));
+  player.setSpeed(clamped);
+  els.speedLabel.textContent = String(clamped);
+  els.speedSlider.value = String(clamped);
+  els.speedInput.value = String(clamped);
 }
 
 // ---- Array generation ----------------------------------------------------
@@ -249,9 +262,20 @@ function wireControls() {
   });
 
   els.speedSlider.addEventListener("input", () => {
-    const v = Number(els.speedSlider.value);
-    els.speedLabel.textContent = String(v);
+    applySpeed(els.speedSlider.value);
+  });
+
+  // Manual speed entry: update live while typing, fully sync on Enter/blur.
+  els.speedInput.addEventListener("input", () => {
+    const raw = els.speedInput.value.trim();
+    if (raw === "") return; // let the user keep typing
+    const v = Number(raw);
+    if (!Number.isFinite(v)) return;
     player.setSpeed(v);
+    els.speedLabel.textContent = String(v);
+  });
+  els.speedInput.addEventListener("change", () => {
+    applySpeed(els.speedInput.value);
   });
 
   els.randomize.addEventListener("click", () => {
