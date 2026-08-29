@@ -154,8 +154,10 @@ html, body {
   min-height: 0;
 }
 
-#array-box { flex: 3 1 0; }
-#bars-box { flex: 2 1 0; }
+#array-box { flex: 2 1 0; }
+#tree-box { flex: 2 1 0; }
+#bars-box { flex: 1 1 0; }
+#tree-box.hidden { display: none; }
 
 .viz-header {
   padding: 6px 12px;

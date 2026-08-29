@@ -98,6 +98,8 @@ tests/test_engine.py     engine correctness + line-mapping tests
 - [x] Play/pause, step fwd/back, speed slider, skip to end, shuffle, size
 - [x] Compare/swap highlights with arrows, green "sorted" sweep
 - [x] Array (boxes-with-numbers) view with slide animations + bars overview
+- [x] Optimized quick sort (median-of-three + insertion cutoff) with a
+      dedicated recursion-tree view showing partitions and pivots
 - [ ] True `sys.settrace` live-tracing mode
 - [ ] More algorithms (heap sort, radix sort, Bogo sort…)
 - [ ] Dual/auxiliary-array visualization for merge sort

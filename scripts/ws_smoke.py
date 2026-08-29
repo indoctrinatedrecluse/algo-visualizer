@@ -19,7 +19,7 @@ DEFAULT = "ws://127.0.0.1:8080/ws"
 HAPPY = {
     "action": "sort",
     "algorithm": "quick_sort",
-    "array": [3, 1, 2, 8, 5, 7, 4, 6],
+    "array": [13, 3, 11, 18, 5, 7, 14, 1, 9, 16, 2, 12, 20, 4, 6, 15, 8, 10, 17, 19],
     "request_id": 42,
 }
 
@@ -37,6 +37,12 @@ async def main(url):
         print("happy.stats:", msg.get("stats"))
         assert msg["request_id"] == 42
         assert frames and frames[-1]["array"] == sorted(HAPPY["array"])
+        types = {f["type"] for f in frames}
+        assert "partition" in types, "expected quick-sort partition events"
+        assert "pivot" in types, "expected quick-sort pivot events"
+        partition = next(f for f in frames if f["type"] == "partition")
+        assert len(partition["children"]) == 2
+        assert len(partition["range"]) == 2
 
         # 2. ping
         await ws.send(json.dumps({"action": "ping"}))

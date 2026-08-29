@@ -2,13 +2,14 @@
 // and toolbar controls.
 
 import { APIClient } from "./api.js";
-import { ArrayRenderer, BarRenderer } from "./renderers.js";
+import { ArrayRenderer, BarRenderer, TreeRenderer } from "./renderers.js";
 import { CodePanel } from "./codePanel.js";
 import { Player } from "./playback.js";
 
 const api = new APIClient();
 const arrayRenderer = new ArrayRenderer(document.getElementById("array-canvas"));
 const barRenderer = new BarRenderer(document.getElementById("bars-canvas"));
+const treeRenderer = new TreeRenderer(document.getElementById("tree-canvas"));
 const codePanel = new CodePanel(document.getElementById("code-block"));
 
 const els = {
@@ -30,6 +31,7 @@ const els = {
   statSteps: document.getElementById("stat-steps"),
   statCompares: document.getElementById("stat-compares"),
   statSwaps: document.getElementById("stat-swaps"),
+  treeBox: document.getElementById("tree-box"),
 };
 
 let currentArray = [];
@@ -40,6 +42,7 @@ let sortInFlight = false;
 const player = new Player((frame, prev, progress, sortedFlags) => {
   arrayRenderer.render(frame, prev, progress, sortedFlags);
   barRenderer.render(frame, prev, progress, sortedFlags);
+  if (treeVisible()) treeRenderer.render(player.frames, player.index, sortedFlags);
   codePanel.highlight(frame.line);
   if (frame.message) els.status.textContent = frame.message;
 
@@ -62,11 +65,22 @@ function setPlayLabel() {
   els.play.textContent = player.playing ? "⏸ Pause" : "▶ Play";
 }
 
+function treeVisible() {
+  return els.treeBox && !els.treeBox.classList.contains("hidden");
+}
+
 function renderIdle() {
   const frame = { array: currentArray, indices: [], type: "idle", line: null, message: "" };
   const empty = new Set();
   arrayRenderer.render(frame, null, 1, empty);
   barRenderer.render(frame, null, 1, empty);
+  treeRenderer.render([], -1, empty);
+}
+
+function resizeViews() {
+  arrayRenderer.resize();
+  barRenderer.resize();
+  treeRenderer.resize();
 }
 
 // ---- Array generation ----------------------------------------------------
@@ -107,6 +121,9 @@ async function loadAlgorithm(name) {
   const detail = await api.getAlgorithm(name);
   codePanel.setSource(detail.source, detail.start_line);
   renderDescription(detail);
+  const showTree = detail.name === "quick_sort";
+  els.treeBox.classList.toggle("hidden", !showTree);
+  resizeViews();
 }
 
 // ---- Sort via WebSocket --------------------------------------------------
@@ -213,8 +230,7 @@ async function init() {
   await loadAlgorithm(algorithms[0].name);
   wireControls();
   player.setSpeed(Number(els.speedSlider.value));
-  arrayRenderer.resize();
-  barRenderer.resize();
+  resizeViews();
   randomize();
 }
 

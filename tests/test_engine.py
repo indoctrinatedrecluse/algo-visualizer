@@ -106,3 +106,36 @@ def test_algorithm_detail_has_source():
     assert "def quick_sort" in detail["source"]
     assert detail["start_line"] >= 1
     assert detail["complexity"]["worst"] == "O(n²)"
+
+
+def test_quick_sort_emits_partition_and_range_events():
+    """The optimized quick sort must emit range/pivot/partition frames that
+    drive the recursion-tree visualization."""
+    arr = [random.Random(3).randint(1, 100) for _ in range(40)]
+    result = engine.run_sort("quick_sort", arr)
+
+    partition_frames = [f for f in result["frames"] if f["type"] == "partition"]
+    assert partition_frames, "expected at least one partition event"
+    for f in partition_frames:
+        assert len(f["range"]) == 2
+        assert len(f["children"]) == 2
+        lo, hi = f["range"]
+        assert 0 <= lo <= hi < len(arr)
+        for child_lo, child_hi in f["children"]:
+            assert -1 <= child_lo and child_hi < len(arr)
+
+    assert any(f["type"] == "range" for f in result["frames"])
+    assert any(f["type"] == "pivot" for f in result["frames"])
+
+
+def test_quick_sort_marks_every_element_sorted():
+    """Every index should be permanently marked 'sorted' by the time the
+    optimized quick sort finishes (pivots, singletons and insertion-sorted
+    ranges are all covered)."""
+    arr = [random.Random(11).randint(1, 100) for _ in range(60)]
+    result = engine.run_sort("quick_sort", arr)
+    marked = set()
+    for f in result["frames"]:
+        if f["type"] == "sorted":
+            marked.update(f["indices"])
+    assert marked == set(range(len(arr))), "every index should be marked sorted"

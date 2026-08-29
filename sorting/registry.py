@@ -19,6 +19,10 @@ SWAP = "swap"
 MARK = "mark"
 SORTED = "sorted"
 DONE = "done"
+# Quick-sort-specific steps (drive the recursion-tree view).
+PIVOT = "pivot"        # pivot chosen / placed
+RANGE = "range"        # entering a subarray [lo, hi]
+PARTITION = "partition"  # subarray split; carries the two child ranges
 
 
 @dataclass
@@ -26,14 +30,21 @@ class Step:
     """One observable event yielded by an algorithm generator.
 
     Attributes:
-        type: One of COMPARE / SWAP / MARK / SORTED / DONE.
+        type: One of COMPARE / SWAP / MARK / SORTED / DONE / PIVOT / RANGE /
+            PARTITION.
         indices: Array positions to highlight (0-based).
         message: Human-readable explanation shown in the status bar.
+        range: Optional (lo, hi) of the subarray currently being processed
+            (used by quick sort to mark the active range).
+        children: Optional tuple of ((lo1, hi1), (lo2, hi2)) — the two
+            subarrays produced by a partition.
     """
 
     type: str
     indices: tuple = ()
     message: str = ""
+    range: tuple = ()
+    children: tuple = ()
 
 
 @dataclass

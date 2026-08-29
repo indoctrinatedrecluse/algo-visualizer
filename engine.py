@@ -8,8 +8,13 @@ both the canvas visualization and the synchronized code highlight::
         "line": 14,           # absolute source line of the yield (1-based)
         "indices": [2, 5],    # positions to highlight
         "type": "swap",       # compare | swap | mark | sorted | done
+                             #   | pivot | range | partition
         "message": "Swap 8 and 3",
     }
+
+Quick sort adds two optional fields for the recursion-tree view:
+``range`` ([lo, hi] of the active subarray) and ``children`` (the two
+subranges produced by a partition).
 """
 
 from __future__ import annotations
@@ -68,6 +73,12 @@ def run_sort(algorithm: str, array: list) -> dict[str, Any]:
                 "message": step.message,
             }
         )
+
+        # Quick-sort-specific fields for the recursion-tree view.
+        if step.range:
+            frames[-1]["range"] = list(step.range)
+        if step.children:
+            frames[-1]["children"] = [list(child) for child in step.children]
 
     return {
         "frames": frames,

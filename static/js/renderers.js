@@ -17,6 +17,7 @@ const SWAP_COLOR = "#f85149";
 const COMPARE_COLOR = "#e3b341";
 const MARK_COLOR = "#bc8cff";
 const SORTED_COLOR = "#3fb950";
+const PIVOT_COLOR = "#ff9f43";
 const BASE_FILL = "#1d2536";
 const BASE_STROKE = "#4a5568";
 const TEXT_COLOR = "#e6edf3";
@@ -48,6 +49,7 @@ function slotColor(type, highlighted, sorted) {
   if (type === "swap") return SWAP_COLOR;
   if (type === "compare") return COMPARE_COLOR;
   if (type === "mark") return MARK_COLOR;
+  if (type === "pivot") return PIVOT_COLOR;
   return null;
 }
 
@@ -62,7 +64,7 @@ function barColor(value, max) {
 
 function textColor(fill) {
   if (!fill) return TEXT_COLOR;
-  if (fill === COMPARE_COLOR || fill === MARK_COLOR) return "#16181d";
+  if (fill === COMPARE_COLOR || fill === MARK_COLOR || fill === PIVOT_COLOR) return "#16181d";
   return "#ffffff";
 }
 
@@ -228,6 +230,18 @@ export class ArrayRenderer {
     const showNumbers = boxW >= 30;
     const fontSize = clamp(Math.floor(boxW * 0.4), 11, 22);
 
+    // Active subarray overlay (quick sort: which range is being processed).
+    if (Array.isArray(curr.range) && curr.range.length === 2) {
+      const [rlo, rhi] = curr.range;
+      const x0 = slotX(rlo) - gap / 2;
+      const x1 = slotX(rhi) + boxW + gap / 2;
+      ctx.fillStyle = "rgba(88, 166, 255, 0.07)";
+      ctx.fillRect(x0, top - 4, x1 - x0, boxH + 8);
+      ctx.fillStyle = "rgba(88, 166, 255, 0.55)";
+      ctx.fillRect(x0, top - 3, 2, boxH + 6);
+      ctx.fillRect(x1 - 2, top - 3, 2, boxH + 6);
+    }
+
     for (let d = 0; d < n; d++) {
       const { from } = map[d];
       const x = lerp(slotX(from), slotX(d), progress);
@@ -259,6 +273,208 @@ export class ArrayRenderer {
                   type === "swap" ? SWAP_COLOR : COMPARE_COLOR);
       }
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Recursion tree: the quick-sort divide-and-conquer structure.
+//
+// Every node is a subarray [lo..hi] drawn as a segment at its recursion
+// depth. Partitions split a node into two children; pivot positions are
+// marked with an orange tick; the currently-processed range is highlighted;
+// ranges whose elements are all permanently sorted turn green.
+// ---------------------------------------------------------------------------
+export class TreeRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this._resize = this.resize.bind(this);
+    window.addEventListener("resize", this._resize);
+    this.resize();
+    this._frames = null;
+    this._builtUpTo = -1;
+    this._tree = null;
+  }
+
+  resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const parent = this.canvas.parentElement;
+    const rect = parent ? parent.getBoundingClientRect() : { width: 640, height: 180 };
+    const width = Math.max(1, rect.width);
+    const height = Math.max(1, rect.height);
+    this.canvas.width = Math.floor(width * dpr);
+    this.canvas.height = Math.floor(height * dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this._w = width;
+    this._h = height;
+  }
+
+  render(frames, index, sortedFlags) {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this._w, this._h);
+    if (!frames || frames.length === 0 || index < 0) {
+      this._frames = null;
+      this._builtUpTo = -1;
+      this._tree = null;
+      return;
+    }
+
+    if (this._frames !== frames) {
+      this._frames = frames;
+      this._builtUpTo = -1;
+      this._tree = null;
+    }
+    if (index < this._builtUpTo) {
+      // Scrubbed backwards: rebuild the tree from scratch.
+      this._builtUpTo = -1;
+      this._tree = null;
+    }
+    if (!this._tree) {
+      const n = frames[0] ? frames[0].array.length : 0;
+      if (!n) return;
+      this._tree = { lo: 0, hi: n - 1, children: [], pivot: null };
+      this._builtUpTo = -1;
+    }
+
+    // Incrementally apply frames up to the current index.
+    while (this._builtUpTo < index && this._builtUpTo < frames.length - 1) {
+      this._builtUpTo += 1;
+      this.applyFrame(frames[this._builtUpTo]);
+    }
+
+    const cur = frames[Math.min(index, frames.length - 1)];
+    let activeNode = null;
+    if (cur && cur.range) {
+      activeNode = this.find(this._tree, cur.range[0], cur.range[1]);
+    }
+    this.drawTree(this._tree, this._w, this._h, sortedFlags, activeNode);
+  }
+
+  find(node, lo, hi) {
+    if (node.lo === lo && node.hi === hi) return node;
+    for (const child of node.children) {
+      const hit = this.find(child, lo, hi);
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  applyFrame(f) {
+    if (!f.range) return;
+    const node = this.find(this._tree, f.range[0], f.range[1]);
+    if (!node) return;
+    if (f.type === "partition" && Array.isArray(f.children) && f.children.length === 2) {
+      node.children = f.children
+        .map(([a, b]) => ({ lo: a, hi: b, children: [], pivot: null }))
+        .filter((c) => c.lo <= c.hi);
+    }
+    if (f.type === "pivot") node.pivot = f.indices[0];
+  }
+
+  drawTree(tree, w, h, sortedFlags, activeNode) {
+    const ctx = this.ctx;
+    const n = tree.hi - tree.lo + 1;
+    if (!n) return;
+
+    let maxDepth = 0;
+    const markDone = (node, depth) => {
+      maxDepth = Math.max(maxDepth, depth);
+      if (node.children.length) {
+        node.done = node.children.every((c) => markDone(c, depth + 1));
+      } else {
+        node.done = true;
+        for (let k = node.lo; k <= node.hi; k++) {
+          if (!sortedFlags.has(k)) { node.done = false; break; }
+        }
+      }
+      return node.done;
+    };
+    markDone(tree, 0);
+
+    const padX = 18;
+    const padTop = 12;
+    const padBottom = 18;
+    const availW = Math.max(50, w - padX * 2);
+    const availH = Math.max(30, h - padTop - padBottom);
+    const levelH = maxDepth > 0 ? Math.min(30, availH / (maxDepth + 1)) : availH;
+    const barH = Math.max(6, levelH * 0.52);
+    const yOf = (depth) => padTop + depth * levelH;
+    const slotX = (lo, hi) => padX + (lo / n) * availW;
+    const slotW = (lo, hi) => ((hi - lo + 1) / n) * availW;
+
+    // Edges (parent -> children).
+    const drawEdges = (node, depth) => {
+      if (!node.children.length) return;
+      const px = slotX(node.lo, node.hi) + slotW(node.lo, node.hi) / 2;
+      const py = yOf(depth) + barH;
+      ctx.strokeStyle = "rgba(139,148,158,0.35)";
+      ctx.lineWidth = 1;
+      for (const child of node.children) {
+        const cx = slotX(child.lo, child.hi) + slotW(child.lo, child.hi) / 2;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(cx, yOf(depth + 1));
+        ctx.stroke();
+        drawEdges(child, depth + 1);
+      }
+    };
+    drawEdges(tree, 0);
+
+    // Nodes.
+    const drawNode = (node, depth) => {
+      const x = slotX(node.lo, node.hi);
+      const sw = Math.max(4, slotW(node.lo, node.hi));
+      const y = yOf(depth);
+      const active = node === activeNode;
+
+      ctx.fillStyle = node.done
+        ? "rgba(63,185,80,0.30)"
+        : active
+          ? "rgba(88,166,255,0.75)"
+          : "#21262d";
+      ctx.strokeStyle = node.done ? SORTED_COLOR : active ? "#58a6ff" : "#484f58";
+      ctx.lineWidth = active ? 2 : 1;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") ctx.roundRect(x, y, sw, barH, 3);
+      else ctx.rect(x, y, sw, barH);
+      ctx.fill();
+      ctx.stroke();
+
+      if (sw >= 36) {
+        ctx.fillStyle = node.done ? SORTED_COLOR : active ? "#ffffff" : "#8b949e";
+        ctx.font = "10px Consolas, monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`[${node.lo}..${node.hi}]`, x + sw / 2, y + barH / 2);
+      }
+
+      if (node.pivot != null) {
+        const rel = (node.pivot - node.lo) / Math.max(1, node.hi - node.lo + 1);
+        ctx.fillStyle = PIVOT_COLOR;
+        ctx.fillRect(x + rel * sw - 1.5, y - 3, 3, barH + 6);
+      }
+
+      node.children.forEach((c) => drawNode(c, depth + 1));
+    };
+    drawNode(tree, 0);
+
+    // Legend.
+    ctx.font = "10px Consolas, monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    const ly = h - 15;
+    ctx.fillStyle = PIVOT_COLOR;
+    ctx.fillRect(padX, ly, 9, 9);
+    ctx.fillStyle = "#8b949e";
+    ctx.fillText("pivot", padX + 13, ly - 1);
+    ctx.fillStyle = "#58a6ff";
+    ctx.fillRect(padX + 57, ly, 9, 9);
+    ctx.fillStyle = "#8b949e";
+    ctx.fillText("active", padX + 70, ly - 1);
+    ctx.fillStyle = SORTED_COLOR;
+    ctx.fillRect(padX + 112, ly, 9, 9);
+    ctx.fillStyle = "#8b949e";
+    ctx.fillText("done", padX + 125, ly - 1);
   }
 }
 
