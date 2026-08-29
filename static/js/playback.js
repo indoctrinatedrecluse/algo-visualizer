@@ -3,6 +3,13 @@
 // The server computes the full frame list up-front; the client replays it
 // with requestAnimationFrame at a user-chosen speed (steps/second). This
 // decouples compute time from animation time and makes scrubbing trivial.
+//
+// Transitions INTO a "swap" frame get a minimum duration (SWAP_MS) so the
+// sliding elements stay visible even at high playback speeds. Each frame is
+// rendered as (curr, prev, progress) so renderers can interpolate positions.
+
+// Minimum duration of a swap transition, in milliseconds.
+const SWAP_MS = 220;
 
 export class Player {
   constructor(render) {
@@ -53,9 +60,14 @@ export class Player {
   }
 
   renderFrame() {
-    const f = this.frames[this.index];
-    if (!f) return;
-    this.render(f, this.cumSorted[this.index] ?? new Set());
+    const curr = this.frames[this.index];
+    if (!curr) return;
+    const prev = this.index > 0 ? this.frames[this.index - 1] : null;
+    const dur = this.frameDuration();
+    const progress = this.playing && this.index > 0 && dur > 0
+      ? Math.min(1, this.accum / dur)
+      : 1;
+    this.render(curr, prev, progress, this.cumSorted[this.index] ?? new Set());
   }
 
   play() {
@@ -73,16 +85,30 @@ export class Player {
     else this.play();
   }
 
+  // Duration of the current frame's display/transition, in milliseconds.
+  // Swap frames are held at least SWAP_MS so the slide is visible; every
+  // other frame follows the user-chosen speed (steps per second).
+  frameDuration() {
+    const curr = this.frames[this.index];
+    const base = 1000 / this.sps;
+    if (!curr || this.index === 0) return base;
+    return curr.type === "swap" ? Math.max(base, SWAP_MS) : base;
+  }
+
   tick(now) {
     if (this.playing) {
       const dt = Math.min(now - this.last, 250); // clamp long background gaps
       this.last = now;
-      this.accum += (dt / 1000) * this.sps;
+      this.accum += dt; // ms spent inside the current frame
 
       let guard = 0;
-      while (this.accum >= 1 && this.index < this.frames.length - 1) {
+      while (this.accum >= this.frameDuration()
+             && this.index < this.frames.length - 1) {
+        this.accum -= this.frameDuration();
         this.index += 1;
-        this.accum -= 1;
+        // Restart swap animations from 0 so the slide is always fully visible,
+        // even after skipping through many fast non-swap frames.
+        if (this.frames[this.index]?.type === "swap") this.accum = 0;
         if (++guard > 5000) {
           this.accum = 0; // never loop unboundedly
           break;
@@ -91,6 +117,7 @@ export class Player {
 
       if (this.index >= this.frames.length - 1) {
         this.playing = false;
+        this.accum = 0;
         this.onEnd?.();
       }
       this.renderFrame();
@@ -101,6 +128,7 @@ export class Player {
   stepForward() {
     if (this.frames.length && this.index < this.frames.length - 1) {
       this.index += 1;
+      this.accum = 0;
       this.playing = false;
       this.renderFrame();
     }
@@ -109,6 +137,7 @@ export class Player {
   stepBack() {
     if (this.frames.length && this.index > 0) {
       this.index -= 1;
+      this.accum = 0;
       this.playing = false;
       this.renderFrame();
     }
@@ -126,6 +155,7 @@ export class Player {
   reset() {
     if (this.frames.length) {
       this.index = 0;
+      this.accum = 0;
       this.playing = false;
       this.renderFrame();
     }

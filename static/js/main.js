@@ -2,12 +2,13 @@
 // and toolbar controls.
 
 import { APIClient } from "./api.js";
-import { CanvasRenderer } from "./canvas.js";
+import { ArrayRenderer, BarRenderer } from "./renderers.js";
 import { CodePanel } from "./codePanel.js";
 import { Player } from "./playback.js";
 
 const api = new APIClient();
-const renderer = new CanvasRenderer(document.getElementById("viz-canvas"));
+const arrayRenderer = new ArrayRenderer(document.getElementById("array-canvas"));
+const barRenderer = new BarRenderer(document.getElementById("bars-canvas"));
 const codePanel = new CodePanel(document.getElementById("code-block"));
 
 const els = {
@@ -36,8 +37,9 @@ let requestId = 0;
 let sortInFlight = false;
 
 // ---- Playback engine -----------------------------------------------------
-const player = new Player((frame, sortedFlags) => {
-  renderer.render(frame, sortedFlags);
+const player = new Player((frame, prev, progress, sortedFlags) => {
+  arrayRenderer.render(frame, prev, progress, sortedFlags);
+  barRenderer.render(frame, prev, progress, sortedFlags);
   codePanel.highlight(frame.line);
   if (frame.message) els.status.textContent = frame.message;
 
@@ -60,6 +62,13 @@ function setPlayLabel() {
   els.play.textContent = player.playing ? "⏸ Pause" : "▶ Play";
 }
 
+function renderIdle() {
+  const frame = { array: currentArray, indices: [], type: "idle", line: null, message: "" };
+  const empty = new Set();
+  arrayRenderer.render(frame, null, 1, empty);
+  barRenderer.render(frame, null, 1, empty);
+}
+
 // ---- Array generation ----------------------------------------------------
 function randomArray(n) {
   const arr = [];
@@ -75,7 +84,7 @@ function randomize() {
   player.index = -1;
   player.playing = false;
   setPlayLabel();
-  renderer.render({ array: currentArray, indices: [], type: "idle", message: "" });
+  renderIdle();
   codePanel.highlight(null);
   els.status.textContent = `${n} elements — press Sort to run the algorithm`;
   els.statSteps.textContent = "0";
@@ -204,6 +213,8 @@ async function init() {
   await loadAlgorithm(algorithms[0].name);
   wireControls();
   player.setSpeed(Number(els.speedSlider.value));
+  arrayRenderer.resize();
+  barRenderer.resize();
   randomize();
 }
 

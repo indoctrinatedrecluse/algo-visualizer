@@ -17,8 +17,8 @@
     </div>
 
     <div class="group">
-      <label for="size-slider">Size <span id="size-label">30</span></label>
-      <input type="range" id="size-slider" min="5" max="100" value="30" />
+      <label for="size-slider">Size <span id="size-label">15</span></label>
+      <input type="range" id="size-slider" min="5" max="100" value="15" />
     </div>
 
     <button id="randomize-btn" title="New random array">Shuffle</button>
@@ -55,9 +55,16 @@
   </section>
 
   <main id="panels">
-    <section id="viz-panel">
-      <canvas id="viz-canvas"></canvas>
-    </section>
+    <div id="viz-column">
+      <section id="array-box" class="viz-box">
+        <div class="viz-header">Array view</div>
+        <div class="viz-body"><canvas id="array-canvas"></canvas></div>
+      </section>
+      <section id="bars-box" class="viz-box">
+        <div class="viz-header">Bars view</div>
+        <div class="viz-body"><canvas id="bars-canvas"></canvas></div>
+      </section>
+    </div>
     <aside id="code-panel">
       <div id="code-header">Source · Python</div>
       <pre id="code-block"></pre>
