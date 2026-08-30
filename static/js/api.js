@@ -3,6 +3,21 @@
 // The WebSocket is opened lazily (first sort) and auto-reconnects on drop.
 // Messages are tagged with a request_id so stale results are ignored.
 
+function getBaseUrl() {
+  if (typeof window !== "undefined" && location.hostname.includes("github.io")) {
+    return localStorage.getItem("algo_api_url") || "https://indoctrinatedrecluse-algo-visualizer.hf.space";
+  }
+  return "";
+}
+
+function getWsUrl() {
+  if (typeof window !== "undefined" && location.hostname.includes("github.io")) {
+    return localStorage.getItem("algo_ws_url") || "wss://indoctrinatedrecluse-algo-visualizer.hf.space/ws";
+  }
+  const scheme = location.protocol === "https:" ? "wss://" : "ws://";
+  return `${scheme}${location.host}/ws`;
+}
+
 export class APIClient {
   constructor() {
     this.ws = null;
@@ -12,14 +27,16 @@ export class APIClient {
   }
 
   async getAlgorithms() {
-    const res = await fetch("/api/algorithms");
+    const base = getBaseUrl();
+    const res = await fetch(`${base}/api/algorithms`);
     if (!res.ok) throw new Error(`HTTP ${res.status} from /api/algorithms`);
     const data = await res.json();
     return data.algorithms;
   }
 
   async getAlgorithm(name) {
-    const res = await fetch(`/api/algorithms/${encodeURIComponent(name)}`);
+    const base = getBaseUrl();
+    const res = await fetch(`${base}/api/algorithms/${encodeURIComponent(name)}`);
     if (!res.ok) throw new Error(`HTTP ${res.status} for ${name}`);
     return res.json();
   }
@@ -30,8 +47,7 @@ export class APIClient {
     if (this.ws && this.ws.readyState === WebSocket.CONNECTING) return this._connecting;
     if (this._connecting) return this._connecting;
 
-    const scheme = location.protocol === "https:" ? "wss://" : "ws://";
-    this.ws = new WebSocket(`${scheme}${location.host}/ws`);
+    this.ws = new WebSocket(getWsUrl());
 
     this._connecting = new Promise((resolve) => {
       this.ws.addEventListener("open", () => resolve(), { once: true });
