@@ -91,10 +91,12 @@ graph/                   graph algorithms (Dijkstra, TSP) + utils
 tree/                    tree algorithms (AVL, Red-Black, Min-Heap, DSW) + utils
 flow/                    network flow algorithms (Edmonds-Karp, Dinic) + utils
 matching/                matching algorithms (Gale-Shapley Stable Marriage) + utils
+greedy/                  greedy algorithms (Fractional Knapsack, Activity Selection, Job Sequencing, Huffman, Coin Change) + utils
+dp/                      dynamic programming (0-1 Knapsack, LCS, Matrix Min Path, 3-Sum, 4-Sum, Fibonacci, LIS, Coin Change DP) + utils
 static/index.html        UI shell
-static/js/               api · renderers · graphRenderer · bstRenderer · flowRenderer · matchingRenderer · playback · codePanel · main
+static/js/               api · renderers · graphRenderer · bstRenderer · flowRenderer · matchingRenderer · dpRenderer · greedyRenderer · playback · codePanel · main
 static/vendor/prism/     vendored Prism (syntax highlighting, offline-safe)
-tests/                   engine, API, graph, tree, flow, and matching unit tests
+tests/                   engine, API, graph, tree, flow, matching, greedy, and dp unit tests
 ```
 
 ## Roadmap
@@ -115,6 +117,10 @@ tests/                   engine, API, graph, tree, flow, and matching unit tests
       bottleneck indicators, and (S, T) Minimum Cut dividing boundary for Edmonds-Karp and Dinic's Algorithm (10+ nodes)
 - [x] Bipartite Stable Matching Canvas view with preference lists, candidate ranking badges, live proposal arrows,
       tentative engagement ribbons, broken engagement indicators, and blocking pairs verifier for Gale-Shapley
+- [x] Dedicated 2D Dynamic Programming Table & Matrix view with cell transitions, dependency arrows, and glowing backtracked optimal paths for 0-1 Knapsack, LCS, and Matrix Shortest Path (Min Path Sum)
+- [x] Dedicated Greedy Timeline & Knapsack Gauge view for Fractional Knapsack, Activity Selection (Interval Scheduling), and Job Sequencing with Deadlines
+- [x] Dynamic Programming & Greedy array/bars views for 3-Sum, 4-Sum, Fibonacci, Longest Increasing Subsequence (LIS), and Coin Change (Greedy & DP)
+- [x] Huffman Coding Prefix Tree construction on Hierarchical Tree view
 - [ ] True `sys.settrace` live-tracing mode
 - [ ] More algorithms (radix sort, Bogo sort…)
 - [ ] Dual/auxiliary-array visualization for merge sort

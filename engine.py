@@ -26,11 +26,13 @@ from __future__ import annotations
 import inspect
 from typing import Any
 
-from registry import ALGORITHMS, FLOW, GRAPH, MATCHING, SEARCHING, TREE
+from registry import ALGORITHMS, DP, FLOW, GRAPH, GREEDY, MATCHING, SEARCHING, TREE
 
 # Import packages so all algorithms register themselves.
+import dp  # noqa: F401
 import flow  # noqa: F401
 import graph  # noqa: F401
+import greedy  # noqa: F401
 import matching  # noqa: F401
 import searching  # noqa: F401
 import sorting  # noqa: F401
@@ -50,17 +52,59 @@ def run_sort(
     key: Any = None,
     flow_data: dict[str, Any] | None = None,
     matching_data: dict[str, Any] | None = None,
+    custom_data: Any = None,
 ) -> dict[str, Any]:
     """Execute ``algorithm``; return frames + stats.
 
-    Supports sorting, searching, graph, tree, network flow, and matching algorithms.
+    Supports sorting, searching, graph, tree, network flow, matching, greedy, and DP algorithms.
     """
     if algorithm not in ALGORITHMS:
         raise ValueError(f"Unknown algorithm: {algorithm!r}")
 
     info = ALGORITHMS[algorithm]
 
-    if info.category == MATCHING:
+    if info.category == GREEDY:
+        if info.name == "fractional_knapsack":
+            gen = info.fn(custom_data)
+        elif info.name == "activity_selection":
+            gen = info.fn(custom_data)
+        elif info.name == "job_sequencing":
+            gen = info.fn(custom_data)
+        elif info.name == "huffman_coding":
+            gen = info.fn(custom_data)
+        elif info.name == "coin_change_greedy":
+            coins = array if array is not None else [25, 10, 5, 1]
+            t = int(target) if target is not None else 67
+            gen = info.fn(coins, t)
+        else:
+            gen = info.fn()
+        arr = array or []
+    elif info.category == DP:
+        if info.name == "knapsack_01":
+            gen = info.fn(custom_data)
+        elif info.name == "lcs":
+            gen = info.fn(custom_data)
+        elif info.name == "min_path_sum":
+            gen = info.fn(custom_data)
+        elif info.name == "three_sum":
+            t = int(target) if target is not None else 0
+            gen = info.fn(array, t)
+        elif info.name == "four_sum":
+            t = int(target) if target is not None else 0
+            gen = info.fn(array, t)
+        elif info.name == "fibonacci":
+            n_val = int(target) if target is not None else (int(key) if key is not None else 15)
+            gen = info.fn(n_val)
+        elif info.name == "lis":
+            gen = info.fn(array)
+        elif info.name == "coin_change_dp":
+            coins = array if array is not None else [1, 2, 5, 10]
+            t = int(target) if target is not None else 18
+            gen = info.fn(coins, t)
+        else:
+            gen = info.fn()
+        arr = array or []
+    elif info.category == MATCHING:
         m_data = matching_data if matching_data is not None else matching.get_default_preferences()
         gen = info.fn(m_data)
         arr = []
@@ -125,13 +169,11 @@ def run_sort(
         except StopIteration:
             break
 
-        # The generator suspends right at its `yield` statement, so its frame
-        # knows the exact source line -- the code highlight can never drift.
         line = gen.gi_frame.f_lineno
 
-        if step.type in ("compare", "relax", "augment", "propose"):
+        if step.type in ("compare", "relax", "augment", "propose", "table_cell"):
             comparisons += 1
-        elif step.type in ("swap", "rotate_left", "rotate_right", "push_flow", "accept", "break"):
+        elif step.type in ("swap", "rotate_left", "rotate_right", "push_flow", "accept", "break", "knapsack_pack", "fraction_pack", "interval_select"):
             swaps += 1
 
         frame: dict[str, Any] = {
@@ -140,7 +182,28 @@ def run_sort(
             "message": step.message,
         }
 
-        if info.category == MATCHING:
+        if info.category == GREEDY:
+            frame["items"] = step.items
+            frame["intervals"] = step.intervals
+            frame["gauge"] = step.gauge
+            frame["tree"] = step.tree
+            frame["indices"] = list(step.indices)
+            frame["state"] = step.state
+        elif info.category == DP:
+            frame["dp_table"] = step.dp_table
+            frame["dp_row"] = step.dp_row
+            frame["dp_col"] = step.dp_col
+            frame["dp_active_cells"] = step.dp_active_cells
+            frame["dp_dependencies"] = step.dp_dependencies
+            frame["dp_row_labels"] = step.dp_row_labels
+            frame["dp_col_labels"] = step.dp_col_labels
+            frame["dp_title"] = step.dp_title
+            frame["backtrack_path"] = step.backtrack_path
+            frame["indices"] = list(step.indices)
+            frame["triplets"] = step.triplets
+            frame["quadruplets"] = step.quadruplets
+            frame["state"] = step.state
+        elif info.category == MATCHING:
             frame["proposer"] = step.proposer
             frame["reviewer"] = step.reviewer
             frame["matches"] = step.matches
@@ -196,7 +259,11 @@ def run_sort(
         "target": target,
     }
 
-    if info.category == MATCHING:
+    if info.category == GREEDY:
+        result["state"] = step.state if frames else {}
+    elif info.category == DP:
+        result["state"] = step.state if frames else {}
+    elif info.category == MATCHING:
         result["preferences"] = m_data
         result["matches"] = step.matches if frames else {}
     elif info.category == GRAPH:

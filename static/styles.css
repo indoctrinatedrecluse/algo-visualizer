@@ -154,6 +154,10 @@ html, body {
   min-height: 0;
 }
 
+#dp-box { flex: 1 1 100%; min-height: 280px; }
+#dp-box.hidden { display: none; }
+#greedy-box { flex: 1 1 100%; min-height: 280px; }
+#greedy-box.hidden { display: none; }
 #matching-box { flex: 1 1 100%; min-height: 280px; }
 #matching-box.hidden { display: none; }
 #flow-box { flex: 1 1 100%; min-height: 280px; }

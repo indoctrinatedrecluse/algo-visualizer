@@ -61,6 +61,18 @@ ACCEPT = "accept"        # reviewer accepts proposal
 REJECT = "reject"        # reviewer rejects proposal
 BREAK = "break"          # reviewer breaks previous engagement
 
+# Greedy steps.
+INTERVAL_SELECT = "interval_select"  # interval selected
+INTERVAL_REJECT = "interval_reject"  # interval rejected/conflict
+KNAPSACK_PACK = "knapsack_pack"      # item packed in knapsack
+FRACTION_PACK = "fraction_pack"      # fractional item slice packed
+COIN_PICK = "coin_pick"              # coin denomination picked
+
+# Dynamic Programming steps.
+TABLE_CELL = "table_cell"            # DP table cell computed
+BACKTRACK = "backtrack"              # optimal solution backtrack step
+MATCH_FIND = "match_find"            # n-sum matching tuple found
+
 # Algorithm categories.
 SORTING = "sorting"
 SEARCHING = "searching"
@@ -68,6 +80,8 @@ GRAPH = "graph"
 TREE = "tree"
 FLOW = "flow"
 MATCHING = "matching"
+GREEDY = "greedy"
+DP = "dp"
 
 
 @dataclass
@@ -111,6 +125,20 @@ class Step:
         rejected: Dict mapping proposer ID -> list of reviewer IDs who rejected them.
         preferences: Dict with {"proposers": {...}, "reviewers": {...}} preference orderings.
         pair_status: Dict mapping 'p-r' -> status ('proposing', 'engaged', 'rejected', 'broken').
+        dp_table: 2D matrix representing the DP state table.
+        dp_row: Active DP row index.
+        dp_col: Active DP column index.
+        dp_active_cells: List of (row, col) coordinates actively highlighted.
+        dp_dependencies: List of (row, col) coordinates being referenced.
+        dp_row_labels: List of label strings for rows.
+        dp_col_labels: List of label strings for columns.
+        dp_title: Title/name of the DP table visualization.
+        backtrack_path: List of (row, col) coordinates in the optimal solution path.
+        items: List of item dicts (e.g. {'id': ..., 'weight': ..., 'value': ..., 'ratio': ..., 'status': ...}).
+        intervals: List of interval dicts (e.g. {'id': ..., 'start': ..., 'end': ..., 'status': ...}).
+        gauge: Dict representing knapsack bucket fill metrics {'current_weight', 'max_capacity', 'total_value'}.
+        triplets: List of 3-sum matching triplets.
+        quadruplets: List of 4-sum matching quadruplets.
     """
 
     type: str
@@ -147,6 +175,20 @@ class Step:
     rejected: dict = field(default_factory=dict)
     preferences: dict = field(default_factory=dict)
     pair_status: dict = field(default_factory=dict)
+    dp_table: list | None = None
+    dp_row: int | None = None
+    dp_col: int | None = None
+    dp_active_cells: list = field(default_factory=list)
+    dp_dependencies: list = field(default_factory=list)
+    dp_row_labels: list = field(default_factory=list)
+    dp_col_labels: list = field(default_factory=list)
+    dp_title: str | None = None
+    backtrack_path: list = field(default_factory=list)
+    items: list = field(default_factory=list)
+    intervals: list = field(default_factory=list)
+    gauge: dict = field(default_factory=dict)
+    triplets: list = field(default_factory=list)
+    quadruplets: list = field(default_factory=list)
 
 
 @dataclass

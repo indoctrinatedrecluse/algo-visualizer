@@ -59,7 +59,7 @@ export class APIClient {
     return this._connecting;
   }
 
-  async requestSort(algorithm, array, requestId, target, graph, start, tree, key, network, matching) {
+  async requestSort(algorithm, array, requestId, target, graph, start, tree, key, network, matching, data) {
     await this.connect();
     const msg = { action: "sort", algorithm, request_id: requestId };
     if (array !== undefined && array !== null) msg.array = array;
@@ -70,6 +70,7 @@ export class APIClient {
     if (key !== undefined && key !== null) msg.key = key;
     if (network !== undefined && network !== null) msg.network = network;
     if (matching !== undefined && matching !== null) msg.matching = matching;
+    if (data !== undefined && data !== null) msg.data = data;
     this.ws.send(JSON.stringify(msg));
   }
 }
