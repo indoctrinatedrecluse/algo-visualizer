@@ -857,12 +857,12 @@ function renderDescription(detail) {
 function updateTargetChip() {
   const isSearchOrTarget = currentAlgo && (
     currentAlgo.category === "searching" ||
-    ["three_sum", "four_sum", "coin_change_greedy", "coin_change_dp"].includes(currentAlgo.name)
+    ["three_sum", "four_sum", "coin_change_greedy", "coin_change_dp", "fibonacci"].includes(currentAlgo.name)
   );
   if (isSearchOrTarget) {
     const v = Number(els.targetInput.value);
-    currentTarget = Number.isNaN(v) ? 0 : v;
-    els.targetChip.textContent = `Target: ${currentTarget}`;
+    currentTarget = Number.isNaN(v) ? (currentAlgo.name === "fibonacci" ? 15 : 0) : v;
+    els.targetChip.textContent = currentAlgo.name === "fibonacci" ? `N: ${currentTarget}` : `Target: ${currentTarget}`;
     els.targetChip.classList.remove("hidden");
   } else {
     currentTarget = null;
@@ -884,7 +884,7 @@ async function loadAlgorithm(name) {
   const isTree = detail.category === "tree" || isHuffman;
   const isGraph = detail.category === "graph";
   const showTree = detail.name === "quick_sort" || detail.name === "merge_sort";
-  const isSearchOrTarget = detail.category === "searching" || ["three_sum", "four_sum", "coin_change_greedy", "coin_change_dp"].includes(detail.name);
+  const isSearchOrTarget = detail.category === "searching" || ["three_sum", "four_sum", "coin_change_greedy", "coin_change_dp", "fibonacci"].includes(detail.name);
 
   els.dpBox.classList.toggle("hidden", !is2DDP);
   els.greedyBox.classList.toggle("hidden", !isGreedyTimelineOrKnapsack);
@@ -1053,11 +1053,47 @@ function startSort() {
   });
 }
 
+function resetSortButton() {
+  const algo = currentAlgo || {};
+  const isMatching = algo.category === "matching";
+  const isFlow = algo.category === "flow";
+  const isTree = algo.category === "tree";
+  const isGraph = algo.category === "graph";
+  const isHuffman = algo.name === "huffman_coding";
+
+  if (algo.name === "fractional_knapsack") els.sort.textContent = "Pack Knapsack";
+  else if (algo.name === "activity_selection") els.sort.textContent = "Select Activities";
+  else if (algo.name === "job_sequencing") els.sort.textContent = "Schedule Jobs";
+  else if (isHuffman) els.sort.textContent = "Build Huffman Tree";
+  else if (algo.name === "coin_change_greedy") els.sort.textContent = "Make Change";
+  else if (algo.name === "knapsack_01") els.sort.textContent = "Fill 0-1 Table";
+  else if (algo.name === "lcs") els.sort.textContent = "Find LCS";
+  else if (algo.name === "min_path_sum") els.sort.textContent = "Find Min Path";
+  else if (algo.name === "three_sum") els.sort.textContent = "Find 3-Sum";
+  else if (algo.name === "four_sum") els.sort.textContent = "Find 4-Sum";
+  else if (algo.name === "fibonacci") els.sort.textContent = "Compute Fibonacci";
+  else if (algo.name === "lis") els.sort.textContent = "Find LIS";
+  else if (algo.name === "coin_change_dp") els.sort.textContent = "Min Coins DP";
+  else if (isMatching) els.sort.textContent = "Find Stable Matching";
+  else if (isFlow) els.sort.textContent = "Find Max Flow";
+  else if (isGraph) els.sort.textContent = algo.name === "tsp" ? "Find Tour" : "Find Path";
+  else if (isTree) {
+    if (algo.name === "avl_insert") els.sort.textContent = "Insert & Balance";
+    else if (algo.name === "avl_delete") els.sort.textContent = "Delete & Balance";
+    else if (algo.name === "rb_insert") els.sort.textContent = "Insert & Recolor";
+    else if (algo.name === "min_heap_insert") els.sort.textContent = "Insert & Sift-Up";
+    else if (algo.name === "min_heap_extract") els.sort.textContent = "Extract-Min";
+    else els.sort.textContent = "Rebalance Tree";
+  } else {
+    els.sort.textContent = algo.category === "searching" ? "Search" : "Sort";
+  }
+}
+
 api.onResult = (msg) => {
   if (msg.request_id !== requestId) return;
   sortInFlight = false;
   els.sort.disabled = false;
-  loadAlgorithm(els.algoSelect.value); // resets button text
+  resetSortButton();
 
   if (!msg.frames || !msg.frames.length) {
     els.status.textContent = "No steps produced.";
@@ -1072,7 +1108,7 @@ api.onResult = (msg) => {
 api.onError = (err) => {
   sortInFlight = false;
   els.sort.disabled = false;
-  loadAlgorithm(els.algoSelect.value);
+  resetSortButton();
   els.status.textContent = `Error: ${err}`;
 };
 

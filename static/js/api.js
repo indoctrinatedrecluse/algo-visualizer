@@ -4,14 +4,22 @@
 // Messages are tagged with a request_id so stale results are ignored.
 
 function getBaseUrl() {
-  if (typeof window !== "undefined" && location.hostname.includes("github.io")) {
+  if (typeof window === "undefined") return "";
+  if (location.protocol === "file:") {
+    return "http://127.0.0.1:8000";
+  }
+  if (location.hostname.includes("github.io")) {
     return localStorage.getItem("algo_api_url") || "https://indoctrinatedrecluse-algo-visualizer.hf.space";
   }
   return "";
 }
 
 function getWsUrl() {
-  if (typeof window !== "undefined" && location.hostname.includes("github.io")) {
+  if (typeof window === "undefined") return "";
+  if (location.protocol === "file:") {
+    return "ws://127.0.0.1:8000/ws";
+  }
+  if (location.hostname.includes("github.io")) {
     return localStorage.getItem("algo_ws_url") || "wss://indoctrinatedrecluse-algo-visualizer.hf.space/ws";
   }
   const scheme = location.protocol === "https:" ? "wss://" : "ws://";

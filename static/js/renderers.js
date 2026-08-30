@@ -30,12 +30,12 @@ const lerp = (a, b, t) => a + (b - a) * t;
 // entry[d] = { from, to }: destination slot d is filled by the element that
 // sat at slot `from` in `prev`, sliding to slot `to` (= d) in `curr`.
 function slideMap(prev, curr) {
-  const n = curr ? curr.array.length : 0;
+  const n = (curr && Array.isArray(curr.array)) ? curr.array.length : 0;
   const map = [];
   for (let d = 0; d < n; d++) map.push({ from: d, to: d });
-  if (prev && curr && curr.type === "swap" && curr.indices.length === 2) {
+  if (prev && curr && curr.type === "swap" && curr.indices && curr.indices.length === 2) {
     const [p, q] = curr.indices;
-    if (p !== q) {
+    if (p !== q && p < n && q < n) {
       map[p] = { from: q, to: p };
       map[q] = { from: p, to: q };
     }
@@ -147,7 +147,7 @@ export class BarRenderer {
     const h = this._h;
     ctx.clearRect(0, 0, w, h);
 
-    const array = curr.array;
+    const array = curr && Array.isArray(curr.array) ? curr.array : [];
     const n = array.length;
     if (n === 0) return;
 
@@ -230,7 +230,7 @@ export class ArrayRenderer {
     const h = this._h;
     ctx.clearRect(0, 0, w, h);
 
-    const array = curr.array;
+    const array = curr && Array.isArray(curr.array) ? curr.array : [];
     const n = array.length;
     if (n === 0) return;
 

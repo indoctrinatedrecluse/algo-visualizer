@@ -180,14 +180,20 @@ def run_sort(
             "line": line,
             "type": step.type,
             "message": step.message,
+            "array": list(arr),
+            "indices": list(step.indices),
         }
+
+        if step.range:
+            frame["range"] = list(step.range)
+        if step.children:
+            frame["children"] = [list(child) for child in step.children]
 
         if info.category == GREEDY:
             frame["items"] = step.items
             frame["intervals"] = step.intervals
             frame["gauge"] = step.gauge
             frame["tree"] = step.tree
-            frame["indices"] = list(step.indices)
             frame["state"] = step.state
         elif info.category == DP:
             frame["dp_table"] = step.dp_table
@@ -199,7 +205,6 @@ def run_sort(
             frame["dp_col_labels"] = step.dp_col_labels
             frame["dp_title"] = step.dp_title
             frame["backtrack_path"] = step.backtrack_path
-            frame["indices"] = list(step.indices)
             frame["triplets"] = step.triplets
             frame["quadruplets"] = step.quadruplets
             frame["state"] = step.state
@@ -238,13 +243,6 @@ def run_sort(
             frame["highlight_nodes"] = step.highlight_nodes
             frame["active_val"] = step.active_val
             frame["node_colors"] = step.node_colors
-        else:
-            frame["array"] = list(arr)
-            frame["indices"] = list(step.indices)
-            if step.range:
-                frame["range"] = list(step.range)
-            if step.children:
-                frame["children"] = [list(child) for child in step.children]
 
         frames.append(frame)
 

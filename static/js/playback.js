@@ -71,7 +71,11 @@ export class Player {
   }
 
   play() {
-    if (this.frames.length === 0 || this.index >= this.frames.length - 1) return;
+    if (this.frames.length === 0) return;
+    if (this.index >= this.frames.length - 1) {
+      this.index = 0;
+      this.accum = 0;
+    }
     this.playing = true;
     this.last = performance.now();
   }
