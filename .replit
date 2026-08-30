@@ -5,8 +5,10 @@
 # external traffic to it; the [[ports]] block forwards external :80 to the
 # internal 8080 (see https://docs.replit.com/features/project-setup/ports).
 
+modules = ["python-3.11"]
+
 entrypoint = "main.py"
-run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+run = "uvicorn main:app --host 0.0.0.0 --port 8080"
 
 [deployment]
 run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
