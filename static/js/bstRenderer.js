@@ -147,7 +147,13 @@ export class BSTRenderer {
     // 3. Draw Nodes & Badges
     const highlights = this.currentFrame?.highlight_nodes || {};
     const activeVal = this.currentFrame?.active_val;
-    const radius = Math.max(14, Math.min(20, Math.floor(availW / (totalNodes * 2.2))));
+    function drawRoundRect(c, x, y, w, h, r = 3) {
+      if (typeof c.roundRect === "function") {
+        c.roundRect(x, y, w, h, r);
+      } else {
+        c.rect(x, y, w, h);
+      }
+    }
 
     function drawNodes(node) {
       if (!node) return;
@@ -158,6 +164,10 @@ export class BSTRenderer {
       const state = highlights[valStr] || (activeVal === node.val ? "compare" : "default");
       const bf = node.bf ?? 0;
       const isImbalanced = Math.abs(bf) > 1;
+
+      let fillCol = "#090d16";
+      let strokeCol = "#64748b";
+      let glowCol = null;
 
       // Base color from Red-Black tree color attribute if present
       const nodeColor = node.color || "BLACK";
@@ -234,7 +244,7 @@ export class BSTRenderer {
         ctx.strokeStyle = node.color === "RED" ? "#fca5a5" : "#94a3b8";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(bX, bY, badgeW, badgeH, 3);
+        drawRoundRect(ctx, bX, bY, badgeW, badgeH, 3);
         ctx.fill();
         ctx.stroke();
 
@@ -255,7 +265,7 @@ export class BSTRenderer {
         ctx.strokeStyle = "#38bdf8";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(bX, bY, badgeW, badgeH, 3);
+        drawRoundRect(ctx, bX, bY, badgeW, badgeH, 3);
         ctx.fill();
         ctx.stroke();
 
@@ -276,7 +286,7 @@ export class BSTRenderer {
         ctx.strokeStyle = isImbalanced ? "#f87171" : "#475569";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(bfX, bfY, bfBadgeW, bfBadgeH, 4);
+        drawRoundRect(ctx, bfX, bfY, bfBadgeW, bfBadgeH, 4);
         ctx.fill();
         ctx.stroke();
 

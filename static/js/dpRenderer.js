@@ -141,6 +141,14 @@ export class DPRenderer {
           textCol = "#38bdf8";
         }
 
+        function drawRoundRect(c, rx, ry, rw, rh, rad = 3) {
+          if (typeof c.roundRect === "function") {
+            c.roundRect(rx, ry, rw, rh, rad);
+          } else {
+            c.rect(rx, ry, rw, rh);
+          }
+        }
+
         if (glow) {
           ctx.shadowColor = glow;
           ctx.shadowBlur = 10;
@@ -149,7 +157,7 @@ export class DPRenderer {
         ctx.strokeStyle = borderCol;
         ctx.lineWidth = isActive || isBacktrack ? 2 : 1;
         ctx.beginPath();
-        ctx.roundRect(x + 2, y + 2, cellW - 4, cellH - 4, 3);
+        drawRoundRect(ctx, x + 2, y + 2, cellW - 4, cellH - 4, 3);
         ctx.fill();
         ctx.stroke();
         ctx.shadowBlur = 0;

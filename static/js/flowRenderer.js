@@ -8,6 +8,14 @@
 //  - (S, T) Minimum Cut dividing boundary visualization.
 //  - Real-time Total Flow HUD gauge.
 
+function drawRoundRect(c, rx, ry, rw, rh, rad = 3) {
+  if (typeof c.roundRect === "function") {
+    c.roundRect(rx, ry, rw, rh, rad);
+  } else {
+    c.rect(rx, ry, rw, rh);
+  }
+}
+
 export class FlowRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -235,7 +243,7 @@ export class FlowRenderer {
       ctx.strokeStyle = isSaturated ? "#ef4444" : (isAugPath ? "#34d399" : (f > 0 ? "#38bdf8" : "#475569"));
       ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.roundRect(mx - badgeW / 2, my - badgeH / 2, badgeW, badgeH, 4);
+      drawRoundRect(ctx, mx - badgeW / 2, my - badgeH / 2, badgeW, badgeH, 4);
       ctx.fill();
       ctx.stroke();
 
@@ -313,7 +321,7 @@ export class FlowRenderer {
         ctx.strokeStyle = "#94a3b8";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(node.x - bW / 2, node.y - radius - 9, bW, bH, 3);
+        drawRoundRect(ctx, node.x - bW / 2, node.y - radius - 9, bW, bH, 3);
         ctx.fill();
         ctx.stroke();
 
@@ -336,7 +344,7 @@ export class FlowRenderer {
     ctx.strokeStyle = "#38bdf8";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.roundRect(hudX, hudY, hudW, hudH, 6);
+    drawRoundRect(ctx, hudX, hudY, hudW, hudH, 6);
     ctx.fill();
     ctx.stroke();
 

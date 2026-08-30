@@ -5,6 +5,14 @@
 //  - Activity Selection / Interval Scheduling (Horizontal timeline interval bars).
 //  - Job Sequencing with Deadlines (Time slot allocation blocks).
 
+function drawRoundRect(c, rx, ry, rw, rh, rad = 3) {
+  if (typeof c.roundRect === "function") {
+    c.roundRect(rx, ry, rw, rh, rad);
+  } else {
+    c.rect(rx, ry, rw, rh);
+  }
+}
+
 export class GreedyRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -126,7 +134,7 @@ export class GreedyRenderer {
       ctx.strokeStyle = borderCol;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(20, cy, leftW - 30, cardH, 5);
+      drawRoundRect(ctx, 20, cy, leftW - 30, cardH, 5);
       ctx.fill();
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -149,7 +157,7 @@ export class GreedyRenderer {
       ctx.strokeStyle = "#38bdf8";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.roundRect(ratioX, cy + 6, 65, cardH - 12, 3);
+      drawRoundRect(ctx, ratioX, cy + 6, 65, cardH - 12, 3);
       ctx.fill();
       ctx.stroke();
 
@@ -182,7 +190,7 @@ export class GreedyRenderer {
     ctx.strokeStyle = "#38bdf8";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(bucketX, bucketY, bucketW, bucketH, 8);
+    drawRoundRect(ctx, bucketX, bucketY, bucketW, bucketH, 8);
     ctx.fill();
     ctx.stroke();
 
@@ -198,7 +206,7 @@ export class GreedyRenderer {
 
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.roundRect(bucketX + 10, fillY, bucketW - 20, fillH, 4);
+      drawRoundRect(ctx, bucketX + 10, fillY, bucketW - 20, fillH, 4);
       ctx.fill();
     }
 
@@ -290,7 +298,7 @@ export class GreedyRenderer {
       ctx.strokeStyle = borderCol;
       ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.roundRect(x1, cy, barW, barH, 4);
+      drawRoundRect(ctx, x1, cy, barW, barH, 4);
       ctx.fill();
       ctx.stroke();
       ctx.shadowBlur = 0;

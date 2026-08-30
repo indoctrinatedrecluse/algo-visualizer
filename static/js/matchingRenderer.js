@@ -10,6 +10,14 @@
 //  - Real-time Stable Matching HUD gauge (Engaged pairs count & Blocking pairs verifier).
 //  - Interactive card positions and responsive canvas auto-scaling.
 
+function drawRoundRect(c, rx, ry, rw, rh, rad = 3) {
+  if (typeof c.roundRect === "function") {
+    c.roundRect(rx, ry, rw, rh, rad);
+  } else {
+    c.rect(rx, ry, rw, rh);
+  }
+}
+
 export class MatchingRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -251,7 +259,7 @@ export class MatchingRenderer {
       ctx.strokeStyle = borderCol;
       ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.roundRect(cX, cY, cardW, cardH, 6);
+      drawRoundRect(ctx, cX, cY, cardW, cardH, 6);
       ctx.fill();
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -304,7 +312,7 @@ export class MatchingRenderer {
         ctx.strokeStyle = pillBorder;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(px - pW / 2, pos.y - pH / 2, pW, pH, 3);
+        drawRoundRect(ctx, px - pW / 2, pos.y - pH / 2, pW, pH, 3);
         ctx.fill();
         ctx.stroke();
 
@@ -361,7 +369,7 @@ export class MatchingRenderer {
       ctx.strokeStyle = borderCol;
       ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.roundRect(cX, cY, cardW, cardH, 6);
+      drawRoundRect(ctx, cX, cY, cardW, cardH, 6);
       ctx.fill();
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -408,7 +416,7 @@ export class MatchingRenderer {
         ctx.strokeStyle = pillBorder;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(px - pW / 2, pos.y - pH / 2, pW, pH, 3);
+        drawRoundRect(ctx, px - pW / 2, pos.y - pH / 2, pW, pH, 3);
         ctx.fill();
         ctx.stroke();
 
@@ -443,7 +451,7 @@ export class MatchingRenderer {
     ctx.strokeStyle = "#38bdf8";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.roundRect(hudX, hudY, hudW, hudH, 5);
+    drawRoundRect(ctx, hudX, hudY, hudW, hudH, 5);
     ctx.fill();
     ctx.stroke();
 

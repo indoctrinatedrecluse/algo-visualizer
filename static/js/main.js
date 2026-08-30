@@ -755,16 +755,38 @@ function randomize() {
     els.status.textContent = `Loaded 6 jobs — press ${els.sort.textContent}`;
   } else if (name === "knapsack_01") {
     currentCustomData = JSON.parse(JSON.stringify(DEFAULT_01_KNAPSACK));
-    dpRenderer.render();
-    els.status.textContent = `0-1 Knapsack loaded — press ${els.sort.textContent}`;
+    const items = currentCustomData.items;
+    const cap = currentCustomData.capacity;
+    const initialTable = Array.from({ length: items.length + 1 }, () => new Array(cap + 1).fill(0));
+    dpRenderer.render({
+      dp_table: initialTable,
+      dp_row_labels: ["∅", ...items.map(it => `${it.id} (W:${it.weight},V:${it.value})`)],
+      dp_col_labels: Array.from({ length: cap + 1 }, (_, c) => `C:${c}`),
+      dp_title: `0-1 Knapsack DP Table (Capacity ${cap})`,
+    });
+    els.status.textContent = `0-1 Knapsack loaded (${items.length} items, Capacity ${cap}) — press ${els.sort.textContent}`;
   } else if (name === "lcs") {
     currentCustomData = ["ABCBDAB", "BDCABA"];
-    dpRenderer.render();
-    els.status.textContent = `LCS loaded: 'ABCBDAB' vs 'BDCABA' — press ${els.sort.textContent}`;
+    const s1 = currentCustomData[0], s2 = currentCustomData[1];
+    const initialTable = Array.from({ length: s1.length + 1 }, () => new Array(s2.length + 1).fill(0));
+    dpRenderer.render({
+      dp_table: initialTable,
+      dp_row_labels: ["∅", ...s1.split("")],
+      dp_col_labels: ["∅", ...s2.split("")],
+      dp_title: `LCS Table: '${s1}' vs '${s2}'`,
+    });
+    els.status.textContent = `LCS loaded: '${s1}' vs '${s2}' — press ${els.sort.textContent}`;
   } else if (name === "min_path_sum") {
     currentCustomData = JSON.parse(JSON.stringify(DEFAULT_GRID_MATRIX));
-    dpRenderer.render();
-    els.status.textContent = `Matrix Minimum Path loaded — press ${els.sort.textContent}`;
+    const m = currentCustomData.length;
+    const n = currentCustomData[0].length;
+    dpRenderer.render({
+      dp_table: currentCustomData,
+      dp_row_labels: currentCustomData.map((_, i) => `Row ${i}`),
+      dp_col_labels: currentCustomData[0].map((_, j) => `Col ${j}`),
+      dp_title: `Matrix Minimum Path Sum (${m} × ${n}) - Cost Grid`,
+    });
+    els.status.textContent = `Matrix Minimum Path loaded (${m} × ${n}) — press ${els.sort.textContent}`;
   } else if (name === "three_sum") {
     currentArray = [-4, -3, -2, -1, -1, 0, 1, 2, 3, 4];
     els.targetInput.value = "0";
@@ -808,14 +830,16 @@ function randomize() {
     flowRenderer.setNetwork(currentNetwork);
     els.status.textContent = `Flow network loaded (${currentNetwork.nodes.length} nodes) — press ${els.sort.textContent} to run`;
   } else if (isTree) {
-    const n = Math.min(24, Math.max(8, Math.round(Number(els.sizeSlider.value)) || 15));
-    if (currentAlgo.name === "dsw_rebalance") {
+    if (currentAlgo.name === "avl_insert" || currentAlgo.name === "avl_delete") {
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_AVL_TREE));
+    } else if (currentAlgo.name === "dsw_rebalance") {
       currentTree = JSON.parse(JSON.stringify(DEFAULT_UNBALANCED_TREE));
     } else if (currentAlgo.name === "rb_insert") {
       currentTree = JSON.parse(JSON.stringify(DEFAULT_RB_TREE));
     } else if (currentAlgo.name.startsWith("min_heap")) {
       currentTree = JSON.parse(JSON.stringify(DEFAULT_HEAP_TREE));
     } else {
+      const n = Math.min(24, Math.max(8, Math.round(Number(els.sizeSlider.value)) || 15));
       currentTree = randomTree(n);
     }
     bstRenderer.setTree(currentTree);

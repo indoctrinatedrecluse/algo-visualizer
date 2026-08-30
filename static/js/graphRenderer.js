@@ -21,7 +21,14 @@ const COLOR_DEFAULT_BORDER = "#4a5568";
 const COLOR_EDGE = "rgba(110, 118, 129, 0.45)";
 const COLOR_ACTIVE_EDGE = "#e3b341";
 const COLOR_RELAXED_EDGE = "#bc8cff";
-const COLOR_PATH_EDGE = "#3fb950";
+function drawRoundRect(ctx, x, y, w, h, r = 4) {
+  ctx.beginPath();
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x, y, w, h, r);
+    return;
+  }
+  ctx.rect(x, y, w, h);
+}
 
 export class GraphRenderer {
   constructor(canvas) {
@@ -273,7 +280,7 @@ export class GraphRenderer {
     ctx.fillStyle = highlight ? "rgba(22, 27, 34, 0.95)" : "rgba(13, 17, 23, 0.85)";
     ctx.strokeStyle = highlight ? "rgba(227, 179, 65, 0.8)" : "rgba(110, 118, 129, 0.4)";
     ctx.lineWidth = 1;
-    roundRect(ctx, rx, ry, pw, ph, 4);
+    drawRoundRect(ctx, rx, ry, pw, ph, 4);
     ctx.fill();
     ctx.stroke();
 
@@ -294,7 +301,7 @@ export class GraphRenderer {
     ctx.fillStyle = "rgba(13, 17, 23, 0.92)";
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
-    roundRect(ctx, rx, ry, pw, ph, 3);
+    drawRoundRect(ctx, rx, ry, pw, ph, 3);
     ctx.fill();
     ctx.stroke();
 
