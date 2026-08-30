@@ -154,6 +154,8 @@ html, body {
   min-height: 0;
 }
 
+#matching-box { flex: 1 1 100%; min-height: 280px; }
+#matching-box.hidden { display: none; }
 #flow-box { flex: 1 1 100%; min-height: 280px; }
 #flow-box.hidden { display: none; }
 #bst-box { flex: 1 1 100%; min-height: 280px; }

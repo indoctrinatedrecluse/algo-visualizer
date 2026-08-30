@@ -55,12 +55,19 @@ PUSH_FLOW = "push_flow"  # flow pushed along edge/path
 LEVEL_GRAPH = "level_graph" # level graph constructed (Dinic)
 CUT = "cut"              # minimum cut identified
 
+# Matching steps (Gale-Shapley).
+PROPOSE = "propose"      # proposer proposes to reviewer
+ACCEPT = "accept"        # reviewer accepts proposal
+REJECT = "reject"        # reviewer rejects proposal
+BREAK = "break"          # reviewer breaks previous engagement
+
 # Algorithm categories.
 SORTING = "sorting"
 SEARCHING = "searching"
 GRAPH = "graph"
 TREE = "tree"
 FLOW = "flow"
+MATCHING = "matching"
 
 
 @dataclass
@@ -97,6 +104,13 @@ class Step:
         min_cut: Tuple of ([nodes in S], [nodes in T]).
         total_flow: Current total flow from source to sink.
         levels: Dict mapping node ID -> integer level in level graph.
+        proposer: Active proposer ID (for matching algorithms).
+        reviewer: Active reviewer ID (for matching algorithms).
+        matches: Dict mapping reviewer ID -> proposer ID (or vice versa).
+        proposals: Dict mapping proposer ID -> list of proposed reviewer IDs.
+        rejected: Dict mapping proposer ID -> list of reviewer IDs who rejected them.
+        preferences: Dict with {"proposers": {...}, "reviewers": {...}} preference orderings.
+        pair_status: Dict mapping 'p-r' -> status ('proposing', 'engaged', 'rejected', 'broken').
     """
 
     type: str
@@ -126,6 +140,13 @@ class Step:
     min_cut: tuple = ()
     total_flow: int = 0
     levels: dict = field(default_factory=dict)
+    proposer: str | None = None
+    reviewer: str | None = None
+    matches: dict = field(default_factory=dict)
+    proposals: dict = field(default_factory=dict)
+    rejected: dict = field(default_factory=dict)
+    preferences: dict = field(default_factory=dict)
+    pair_status: dict = field(default_factory=dict)
 
 
 @dataclass

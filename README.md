@@ -90,10 +90,11 @@ searching/               searching algorithms (linear, binary)
 graph/                   graph algorithms (Dijkstra, TSP) + utils
 tree/                    tree algorithms (AVL, Red-Black, Min-Heap, DSW) + utils
 flow/                    network flow algorithms (Edmonds-Karp, Dinic) + utils
+matching/                matching algorithms (Gale-Shapley Stable Marriage) + utils
 static/index.html        UI shell
-static/js/               api · renderers · graphRenderer · bstRenderer · flowRenderer · playback · codePanel · main
+static/js/               api · renderers · graphRenderer · bstRenderer · flowRenderer · matchingRenderer · playback · codePanel · main
 static/vendor/prism/     vendored Prism (syntax highlighting, offline-safe)
-tests/                   engine, API, graph, tree, and flow unit tests
+tests/                   engine, API, graph, tree, flow, and matching unit tests
 ```
 
 ## Roadmap
@@ -111,7 +112,9 @@ tests/                   engine, API, graph, tree, and flow unit tests
 - [x] Hierarchical Binary Search Tree, AVL tree, Red-Black Tree, and Min-Heap view with populated trees (12–18 nodes),
       balance factors, color flips, rotations (LL, RR, LR, RL, DSW rebalance), and dual heap array view
 - [x] Layered Network Flow Canvas view with directed capacity edges ('f / c'), augmenting path animations,
-      bottleneck indicators, and (S, T) Minimum Cut dividing boundary for Edmonds-Karp and Dinic's Algorithm
+      bottleneck indicators, and (S, T) Minimum Cut dividing boundary for Edmonds-Karp and Dinic's Algorithm (10+ nodes)
+- [x] Bipartite Stable Matching Canvas view with preference lists, candidate ranking badges, live proposal arrows,
+      tentative engagement ribbons, broken engagement indicators, and blocking pairs verifier for Gale-Shapley
 - [ ] True `sys.settrace` live-tracing mode
 - [ ] More algorithms (radix sort, Bogo sort…)
 - [ ] Dual/auxiliary-array visualization for merge sort

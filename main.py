@@ -67,6 +67,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         tree_data=message.get("tree"),
                         key=message.get("key"),
                         flow_data=message.get("network"),
+                        matching_data=message.get("matching") or message.get("preferences"),
                     )
                     result["request_id"] = message.get("request_id")
                     await websocket.send_json({"type": "result", **result})

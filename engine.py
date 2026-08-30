@@ -26,11 +26,12 @@ from __future__ import annotations
 import inspect
 from typing import Any
 
-from registry import ALGORITHMS, FLOW, GRAPH, SEARCHING, TREE
+from registry import ALGORITHMS, FLOW, GRAPH, MATCHING, SEARCHING, TREE
 
 # Import packages so all algorithms register themselves.
 import flow  # noqa: F401
 import graph  # noqa: F401
+import matching  # noqa: F401
 import searching  # noqa: F401
 import sorting  # noqa: F401
 import tree  # noqa: F401
@@ -48,17 +49,22 @@ def run_sort(
     tree_data: dict[str, Any] | None = None,
     key: Any = None,
     flow_data: dict[str, Any] | None = None,
+    matching_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Execute ``algorithm``; return frames + stats.
 
-    Supports sorting, searching, graph, tree, and network flow algorithms.
+    Supports sorting, searching, graph, tree, network flow, and matching algorithms.
     """
     if algorithm not in ALGORITHMS:
         raise ValueError(f"Unknown algorithm: {algorithm!r}")
 
     info = ALGORITHMS[algorithm]
 
-    if info.category == GRAPH:
+    if info.category == MATCHING:
+        m_data = matching_data if matching_data is not None else matching.get_default_preferences()
+        gen = info.fn(m_data)
+        arr = []
+    elif info.category == GRAPH:
         g = graph_data if graph_data is not None else graph.get_default_graph()
         s = str(start) if start else "A"
         t = str(target) if target else None
@@ -123,9 +129,9 @@ def run_sort(
         # knows the exact source line -- the code highlight can never drift.
         line = gen.gi_frame.f_lineno
 
-        if step.type in ("compare", "relax", "augment"):
+        if step.type in ("compare", "relax", "augment", "propose"):
             comparisons += 1
-        elif step.type in ("swap", "rotate_left", "rotate_right", "push_flow"):
+        elif step.type in ("swap", "rotate_left", "rotate_right", "push_flow", "accept", "break"):
             swaps += 1
 
         frame: dict[str, Any] = {
@@ -134,7 +140,15 @@ def run_sort(
             "message": step.message,
         }
 
-        if info.category == GRAPH:
+        if info.category == MATCHING:
+            frame["proposer"] = step.proposer
+            frame["reviewer"] = step.reviewer
+            frame["matches"] = step.matches
+            frame["rejected"] = step.rejected
+            frame["preferences"] = step.preferences
+            frame["pair_status"] = step.pair_status
+            frame["state"] = step.state
+        elif info.category == GRAPH:
             frame["active_node"] = step.active_node
             frame["active_edge"] = list(step.active_edge) if step.active_edge else None
             frame["relaxed_edge"] = list(step.relaxed_edge) if step.relaxed_edge else None
@@ -182,7 +196,10 @@ def run_sort(
         "target": target,
     }
 
-    if info.category == GRAPH:
+    if info.category == MATCHING:
+        result["preferences"] = m_data
+        result["matches"] = step.matches if frames else {}
+    elif info.category == GRAPH:
         result["graph"] = g
         result["start"] = s
         result["target"] = t

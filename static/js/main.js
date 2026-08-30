@@ -6,6 +6,7 @@ import { ArrayRenderer, BarRenderer, TreeRenderer } from "./renderers.js";
 import { GraphRenderer } from "./graphRenderer.js";
 import { BSTRenderer } from "./bstRenderer.js";
 import { FlowRenderer } from "./flowRenderer.js";
+import { MatchingRenderer } from "./matchingRenderer.js";
 import { CodePanel } from "./codePanel.js";
 import { Player } from "./playback.js";
 
@@ -16,6 +17,7 @@ const treeRenderer = new TreeRenderer(document.getElementById("tree-canvas"));
 const graphRenderer = new GraphRenderer(document.getElementById("graph-canvas"));
 const bstRenderer = new BSTRenderer(document.getElementById("bst-canvas"));
 const flowRenderer = new FlowRenderer(document.getElementById("flow-canvas"));
+const matchingRenderer = new MatchingRenderer(document.getElementById("matching-canvas"));
 const codePanel = new CodePanel(document.getElementById("code-block"));
 
 const els = {
@@ -46,6 +48,8 @@ const els = {
   bstHeader: document.getElementById("bst-header"),
   flowBox: document.getElementById("flow-box"),
   flowHeader: document.getElementById("flow-header"),
+  matchingBox: document.getElementById("matching-box"),
+  matchingHeader: document.getElementById("matching-header"),
   arrayBox: document.getElementById("array-box"),
   barsBox: document.getElementById("bars-box"),
   targetInput: document.getElementById("target-input"),
@@ -64,6 +68,7 @@ let currentArray = [];
 let currentGraph = null;
 let currentTree = null;
 let currentNetwork = null;
+let currentPreferences = null;
 let requestId = 0;
 let sortInFlight = false;
 let algoMeta = {};        // name -> metadata from /api/algorithms
@@ -110,31 +115,57 @@ const DEFAULT_FLOW_NETWORK = {
   source: "S",
   sink: "T",
   nodes: [
-    { id: "S", label: "S", x: 80, y: 160, type: "source" },
-    { id: "A", label: "A", x: 230, y: 75 },
-    { id: "B", label: "B", x: 230, y: 160 },
-    { id: "C", label: "C", x: 230, y: 245 },
-    { id: "D", label: "D", x: 410, y: 75 },
-    { id: "E", label: "E", x: 410, y: 160 },
-    { id: "F", label: "F", x: 410, y: 245 },
-    { id: "T", label: "T", x: 560, y: 160, type: "sink" },
+    {"id": "S", "label": "S", "x": 70, "y": 160, "type": "source"},
+    {"id": "A", "label": "A", "x": 200, "y": 65},
+    {"id": "B", "label": "B", "x": 200, "y": 160},
+    {"id": "C", "label": "C", "x": 200, "y": 255},
+    {"id": "D", "label": "D", "x": 340, "y": 65},
+    {"id": "E", "label": "E", "x": 340, "y": 160},
+    {"id": "F", "label": "F", "x": 340, "y": 255},
+    {"id": "G", "label": "G", "x": 470, "y": 100},
+    {"id": "H", "label": "H", "x": 470, "y": 220},
+    {"id": "T", "label": "T", "x": 580, "y": 160, "type": "sink"},
   ],
   edges: [
-    { u: "S", v: "A", capacity: 10 },
-    { u: "S", v: "B", capacity: 5 },
-    { u: "S", v: "C", capacity: 15 },
-    { u: "A", v: "D", capacity: 9 },
-    { u: "A", v: "B", capacity: 4 },
-    { u: "B", v: "E", capacity: 8 },
-    { u: "B", v: "D", capacity: 4 },
-    { u: "C", v: "F", capacity: 16 },
-    { u: "C", v: "E", capacity: 4 },
-    { u: "D", v: "T", capacity: 10 },
-    { u: "D", v: "E", capacity: 15 },
-    { u: "E", v: "T", capacity: 10 },
-    { u: "F", v: "T", capacity: 10 },
-    { u: "F", v: "E", capacity: 6 },
+    {"u": "S", "v": "A", "capacity": 12},
+    {"u": "S", "v": "B", "capacity": 8},
+    {"u": "S", "v": "C", "capacity": 14},
+    {"u": "A", "v": "D", "capacity": 9},
+    {"u": "A", "v": "E", "capacity": 4},
+    {"u": "A", "v": "B", "capacity": 3},
+    {"u": "B", "v": "D", "capacity": 3},
+    {"u": "B", "v": "E", "capacity": 7},
+    {"u": "B", "v": "F", "capacity": 4},
+    {"u": "C", "v": "E", "capacity": 5},
+    {"u": "C", "v": "F", "capacity": 11},
+    {"u": "D", "v": "G", "capacity": 10},
+    {"u": "D", "v": "E", "capacity": 4},
+    {"u": "E", "v": "G", "capacity": 6},
+    {"u": "E", "v": "H", "capacity": 8},
+    {"u": "E", "v": "F", "capacity": 2},
+    {"u": "F", "v": "H", "capacity": 10},
+    {"u": "G", "v": "T", "capacity": 16},
+    {"u": "H", "v": "T", "capacity": 15},
   ],
+};
+
+const DEFAULT_MATCHING_PREFS = {
+  proposers: {
+    M1: ["W2", "W1", "W4", "W3", "W5", "W6"],
+    M2: ["W3", "W2", "W1", "W6", "W4", "W5"],
+    M3: ["W1", "W4", "W3", "W2", "W5", "W6"],
+    M4: ["W4", "W5", "W2", "W1", "W6", "W3"],
+    M5: ["W5", "W2", "W6", "W3", "W1", "W4"],
+    M6: ["W1", "W3", "W5", "W4", "W2", "W6"],
+  },
+  reviewers: {
+    W1: ["M2", "M3", "M1", "M5", "M4", "M6"],
+    W2: ["M4", "M1", "M2", "M3", "M6", "M5"],
+    W3: ["M1", "M2", "M6", "M4", "M5", "M3"],
+    W4: ["M3", "M5", "M4", "M1", "M2", "M6"],
+    W5: ["M6", "M4", "M5", "M2", "M3", "M1"],
+    W6: ["M5", "M6", "M1", "M3", "M2", "M4"],
+  },
 };
 
 const DEFAULT_AVL_TREE = {
@@ -329,7 +360,9 @@ const DEFAULT_UNBALANCED_TREE = {
 
 // ---- Playback engine -----------------------------------------------------
 const player = new Player((frame, prev, progress, sortedFlags) => {
-  if (currentAlgo?.category === "flow") {
+  if (currentAlgo?.category === "matching") {
+    matchingRenderer.render(frame);
+  } else if (currentAlgo?.category === "flow") {
     flowRenderer.render(frame);
   } else if (currentAlgo?.category === "tree") {
     bstRenderer.render(frame);
@@ -356,7 +389,9 @@ const player = new Player((frame, prev, progress, sortedFlags) => {
 
 player.onEnd = () => {
   const last = player.frames[player.index];
-  if (currentAlgo?.category === "flow") {
+  if (currentAlgo?.category === "matching") {
+    els.status.textContent = last?.message || "Stable matching complete ✓";
+  } else if (currentAlgo?.category === "flow") {
     els.status.textContent = last?.message || "Maximum flow computation complete ✓";
   } else if (currentAlgo?.category === "tree") {
     els.status.textContent = last?.message || "Tree operation complete ✓";
@@ -379,7 +414,9 @@ function treeVisible() {
 }
 
 function renderIdle() {
-  if (currentAlgo?.category === "flow") {
+  if (currentAlgo?.category === "matching") {
+    matchingRenderer.render();
+  } else if (currentAlgo?.category === "flow") {
     flowRenderer.render();
   } else if (currentAlgo?.category === "tree") {
     bstRenderer.render();
@@ -402,10 +439,9 @@ function resizeViews() {
   graphRenderer.resize();
   bstRenderer.resize();
   flowRenderer.resize();
+  matchingRenderer.resize();
 }
 
-// Apply a speed value (steps/sec) to the slider, the manual input and the
-// player, clamped to the supported range [1, 300].
 function applySpeed(value) {
   const v = Number(value);
   if (!Number.isFinite(v)) return;
@@ -482,25 +518,25 @@ function randomGraph(numNodes = 10) {
   return { nodes, edges };
 }
 
-function randomFlowNetwork(numNodes = 8) {
-  const count = Math.max(6, Math.min(10, numNodes));
+function randomFlowNetwork(numNodes = 10) {
+  const count = Math.max(8, Math.min(14, numNodes));
   const middleCount = count - 2;
-  const numLayers = count <= 8 ? 3 : 4;
+  const numLayers = count >= 10 ? 4 : 3;
   const nodesPerLayer = Math.max(2, Math.floor(middleCount / (numLayers - 1)));
 
-  const nodes = [{ id: "S", label: "S", x: 80, y: 160, type: "source" }];
+  const nodes = [{ id: "S", label: "S", x: 70, y: 160, type: "source" }];
   const layers = [["S"]];
   const chars = Array.from({ length: middleCount }, (_, i) => String.fromCharCode(65 + i));
   let idx = 0;
 
-  const xStep = 480 / numLayers;
+  const xStep = 490 / numLayers;
   for (let l = 1; l < numLayers; l++) {
     const layerNodes = [];
     const nInLayer = l < numLayers - 1 ? Math.min(nodesPerLayer, chars.length - idx) : chars.length - idx;
     const yStep = 240 / (nInLayer + 1);
     for (let c = 0; c < nInLayer; c++) {
       const id = chars[idx++];
-      const x = Math.round(80 + l * xStep);
+      const x = Math.round(70 + l * xStep);
       const y = Math.round(40 + (c + 1) * yStep);
       nodes.push({ id, label: id, x, y });
       layerNodes.push(id);
@@ -508,7 +544,7 @@ function randomFlowNetwork(numNodes = 8) {
     layers.push(layerNodes);
   }
 
-  nodes.push({ id: "T", label: "T", x: 560, y: 160, type: "sink" });
+  nodes.push({ id: "T", label: "T", x: 580, y: 160, type: "sink" });
   layers.push(["T"]);
 
   const edges = [];
@@ -536,6 +572,22 @@ function randomFlowNetwork(numNodes = 8) {
   }
 
   return { source: "S", sink: "T", nodes, edges };
+}
+
+function randomPreferences(n = 6) {
+  const count = Math.max(4, Math.min(8, n));
+  const proposers = Array.from({ length: count }, (_, i) => `M${i + 1}`);
+  const reviewers = Array.from({ length: count }, (_, i) => `W${i + 1}`);
+
+  const pPrefs = {};
+  for (const p of proposers) {
+    pPrefs[p] = [...reviewers].sort(() => Math.random() - 0.5);
+  }
+  const rPrefs = {};
+  for (const r of reviewers) {
+    rPrefs[r] = [...proposers].sort(() => Math.random() - 0.5);
+  }
+  return { proposers: pPrefs, reviewers: rPrefs };
 }
 
 function randomTree(numNodes = 15) {
@@ -593,6 +645,7 @@ function updateNodeSelects() {
 }
 
 function randomize() {
+  const isMatching = currentAlgo?.category === "matching";
   const isGraph = currentAlgo?.category === "graph";
   const isTree = currentAlgo?.category === "tree";
   const isFlow = currentAlgo?.category === "flow";
@@ -601,8 +654,12 @@ function randomize() {
   player.playing = false;
   setPlayLabel();
 
-  if (isFlow) {
-    const n = Math.min(10, Math.max(6, Math.round(Number(els.sizeSlider.value) / 10) || 8));
+  if (isMatching) {
+    currentPreferences = randomPreferences(6);
+    matchingRenderer.setPreferences(currentPreferences);
+    els.status.textContent = `Randomized preferences (6 pairs) — press ${els.sort.textContent} to run`;
+  } else if (isFlow) {
+    const n = Math.min(14, Math.max(8, Math.round(Number(els.sizeSlider.value) / 7) || 10));
     currentNetwork = randomFlowNetwork(n);
     flowRenderer.setNetwork(currentNetwork);
     els.status.textContent = `Flow network loaded (${currentNetwork.nodes.length} nodes) — press ${els.sort.textContent} to run`;
@@ -674,18 +731,20 @@ async function loadAlgorithm(name) {
   renderDescription(detail);
   currentAlgo = { ...detail, ...(algoMeta[name] || {}) };
 
+  const isMatching = detail.category === "matching";
   const isFlow = detail.category === "flow";
   const isTree = detail.category === "tree";
   const isGraph = detail.category === "graph";
   const showTree = detail.name === "quick_sort" || detail.name === "merge_sort";
   const isSearch = detail.category === "searching";
 
+  els.matchingBox.classList.toggle("hidden", !isMatching);
   els.flowBox.classList.toggle("hidden", !isFlow);
   els.bstBox.classList.toggle("hidden", !isTree);
   els.graphBox.classList.toggle("hidden", !isGraph);
-  els.arrayBox.classList.toggle("hidden", isGraph || isTree || isFlow);
-  els.barsBox.classList.toggle("hidden", isGraph || isTree || isFlow);
-  els.treeBox.classList.toggle("hidden", isGraph || isTree || isFlow || !showTree);
+  els.arrayBox.classList.toggle("hidden", isGraph || isTree || isFlow || isMatching);
+  els.barsBox.classList.toggle("hidden", isGraph || isTree || isFlow || isMatching);
+  els.treeBox.classList.toggle("hidden", isGraph || isTree || isFlow || isMatching || !showTree);
 
   if (showTree && els.treeHeader) {
     els.treeHeader.textContent = `Recursion · ${detail.display_name}`;
@@ -699,13 +758,22 @@ async function loadAlgorithm(name) {
   if (isFlow && els.flowHeader) {
     els.flowHeader.textContent = `Network Flow · ${detail.display_name}`;
   }
+  if (isMatching && els.matchingHeader) {
+    els.matchingHeader.textContent = `Stable Matching · ${detail.display_name}`;
+  }
 
   els.targetGroup.classList.toggle("hidden", !isSearch);
   els.startNodeGroup.classList.toggle("hidden", !isGraph);
   els.targetNodeGroup.classList.toggle("hidden", !isGraph || detail.name === "tsp");
   els.treeKeyGroup.classList.toggle("hidden", !isTree || detail.name === "dsw_rebalance" || detail.name === "min_heap_extract");
 
-  if (isFlow) {
+  if (isMatching) {
+    els.sort.textContent = "Find Stable Matching";
+    if (!currentPreferences) {
+      currentPreferences = JSON.parse(JSON.stringify(DEFAULT_MATCHING_PREFS));
+    }
+    matchingRenderer.setPreferences(currentPreferences);
+  } else if (isFlow) {
     els.sort.textContent = "Find Max Flow";
     if (!currentNetwork) {
       currentNetwork = JSON.parse(JSON.stringify(DEFAULT_FLOW_NETWORK));
@@ -757,6 +825,7 @@ function startSort() {
   if (sortInFlight) return;
 
   const algo = currentAlgo || {};
+  const isMatching = algo.category === "matching";
   const isFlow = algo.category === "flow";
   const isTree = algo.category === "tree";
   const isGraph = algo.category === "graph";
@@ -767,8 +836,11 @@ function startSort() {
   let treeData = null;
   let keyVal = null;
   let netData = null;
+  let matchData = null;
 
-  if (isFlow) {
+  if (isMatching) {
+    matchData = currentPreferences || DEFAULT_MATCHING_PREFS;
+  } else if (isFlow) {
     netData = currentNetwork || DEFAULT_FLOW_NETWORK;
   } else if (isTree) {
     treeData = currentTree;
@@ -806,33 +878,37 @@ function startSort() {
   const myId = ++requestId;
   api.requestSort(
     els.algoSelect.value,
-    (isGraph || isTree || isFlow) ? null : arr,
+    (isGraph || isTree || isFlow || isMatching) ? null : arr,
     myId,
     target,
     isGraph ? currentGraph : null,
     start,
     isTree ? treeData : null,
     isTree ? keyVal : null,
-    isFlow ? netData : null
+    isFlow ? netData : null,
+    isMatching ? matchData : null
   ).catch((err) => {
     sortInFlight = false;
     els.sort.disabled = false;
-    els.sort.textContent = isFlow
-      ? "Find Max Flow"
-      : (isTree ? "Run" : (isGraph ? (algo.name === "tsp" ? "Find Tour" : "Find Path") : "Sort"));
+    els.sort.textContent = isMatching
+      ? "Find Stable Matching"
+      : (isFlow ? "Find Max Flow" : (isTree ? "Run" : (isGraph ? (algo.name === "tsp" ? "Find Tour" : "Find Path") : "Sort")));
     els.status.textContent = `Connection error: ${err.message}`;
   });
 }
 
 api.onResult = (msg) => {
-  if (msg.request_id !== requestId) return; // stale response, ignore
+  if (msg.request_id !== requestId) return;
   sortInFlight = false;
   els.sort.disabled = false;
+  const isMatching = currentAlgo?.category === "matching";
   const isFlow = currentAlgo?.category === "flow";
   const isTree = currentAlgo?.category === "tree";
   const isGraph = currentAlgo?.category === "graph";
 
-  if (isFlow) {
+  if (isMatching) {
+    els.sort.textContent = "Find Stable Matching";
+  } else if (isFlow) {
     els.sort.textContent = "Find Max Flow";
   } else if (isTree) {
     els.sort.textContent = currentAlgo?.name === "avl_insert"
@@ -863,12 +939,13 @@ api.onResult = (msg) => {
 api.onError = (err) => {
   sortInFlight = false;
   els.sort.disabled = false;
+  const isMatching = currentAlgo?.category === "matching";
   const isFlow = currentAlgo?.category === "flow";
   const isTree = currentAlgo?.category === "tree";
   const isGraph = currentAlgo?.category === "graph";
-  els.sort.textContent = isFlow
-    ? "Find Max Flow"
-    : (isTree ? "Run" : (isGraph ? (currentAlgo?.name === "tsp" ? "Find Tour" : "Find Path") : "Sort"));
+  els.sort.textContent = isMatching
+    ? "Find Stable Matching"
+    : (isFlow ? "Find Max Flow" : (isTree ? "Run" : (isGraph ? (currentAlgo?.name === "tsp" ? "Find Tour" : "Find Path") : "Sort")));
   els.status.textContent = `Error: ${err}`;
 };
 
@@ -961,7 +1038,7 @@ async function init() {
   const algorithms = await api.getAlgorithms();
   for (const a of algorithms) algoMeta[a.name] = a;
 
-  for (const cat of ["sorting", "searching", "graph", "tree", "flow"]) {
+  for (const cat of ["sorting", "searching", "graph", "tree", "flow", "matching"]) {
     const group = algorithms.filter((a) => a.category === cat);
     if (!group.length) continue;
     const optGroup = document.createElement("optgroup");
@@ -970,6 +1047,7 @@ async function init() {
     else if (cat === "graph") label = "Graph Algorithms";
     else if (cat === "tree") label = "Binary Search Trees & AVL";
     else if (cat === "flow") label = "Network Flow Algorithms";
+    else if (cat === "matching") label = "Stable Matching (Gale-Shapley)";
     optGroup.label = label;
     for (const a of group) {
       const opt = document.createElement("option");

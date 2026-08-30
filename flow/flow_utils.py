@@ -1,4 +1,4 @@
-"""Flow utilities: Flow network presets, capacity matrix construction,
+"""Flow utilities: Flow network presets (10+ nodes), capacity matrix construction,
 random flow network generation, and Min-Cut reachability BFS.
 """
 
@@ -10,55 +10,62 @@ from typing import Any
 
 
 def get_default_flow_network() -> dict[str, Any]:
-    """Default 8-node layered flow network preset (S -> Layers -> T)."""
+    """Default 10-node layered flow network preset (S -> 3 intermediate layers -> T)."""
     return {
         "source": "S",
         "sink": "T",
         "nodes": [
-            {"id": "S", "label": "S", "x": 80, "y": 160, "type": "source"},
-            {"id": "A", "label": "A", "x": 230, "y": 75},
-            {"id": "B", "label": "B", "x": 230, "y": 160},
-            {"id": "C", "label": "C", "x": 230, "y": 245},
-            {"id": "D", "label": "D", "x": 410, "y": 75},
-            {"id": "E", "label": "E", "x": 410, "y": 160},
-            {"id": "F", "label": "F", "x": 410, "y": 245},
-            {"id": "T", "label": "T", "x": 560, "y": 160, "type": "sink"},
+            {"id": "S", "label": "S", "x": 70, "y": 160, "type": "source"},
+            {"id": "A", "label": "A", "x": 200, "y": 65},
+            {"id": "B", "label": "B", "x": 200, "y": 160},
+            {"id": "C", "label": "C", "x": 200, "y": 255},
+            {"id": "D", "label": "D", "x": 340, "y": 65},
+            {"id": "E", "label": "E", "x": 340, "y": 160},
+            {"id": "F", "label": "F", "x": 340, "y": 255},
+            {"id": "G", "label": "G", "x": 470, "y": 100},
+            {"id": "H", "label": "H", "x": 470, "y": 220},
+            {"id": "T", "label": "T", "x": 580, "y": 160, "type": "sink"},
         ],
         "edges": [
-            {"u": "S", "v": "A", "capacity": 10},
-            {"u": "S", "v": "B", "capacity": 5},
-            {"u": "S", "v": "C", "capacity": 15},
+            {"u": "S", "v": "A", "capacity": 12},
+            {"u": "S", "v": "B", "capacity": 8},
+            {"u": "S", "v": "C", "capacity": 14},
             {"u": "A", "v": "D", "capacity": 9},
-            {"u": "A", "v": "B", "capacity": 4},
-            {"u": "B", "v": "E", "capacity": 8},
-            {"u": "B", "v": "D", "capacity": 4},
-            {"u": "C", "v": "F", "capacity": 16},
-            {"u": "C", "v": "E", "capacity": 4},
-            {"u": "D", "v": "T", "capacity": 10},
-            {"u": "D", "v": "E", "capacity": 15},
-            {"u": "E", "v": "T", "capacity": 10},
-            {"u": "F", "v": "T", "capacity": 10},
-            {"u": "F", "v": "E", "capacity": 6},
+            {"u": "A", "v": "E", "capacity": 4},
+            {"u": "A", "v": "B", "capacity": 3},
+            {"u": "B", "v": "D", "capacity": 3},
+            {"u": "B", "v": "E", "capacity": 7},
+            {"u": "B", "v": "F", "capacity": 4},
+            {"u": "C", "v": "E", "capacity": 5},
+            {"u": "C", "v": "F", "capacity": 11},
+            {"u": "D", "v": "G", "capacity": 10},
+            {"u": "D", "v": "E", "capacity": 4},
+            {"u": "E", "v": "G", "capacity": 6},
+            {"u": "E", "v": "H", "capacity": 8},
+            {"u": "E", "v": "F", "capacity": 2},
+            {"u": "F", "v": "H", "capacity": 10},
+            {"u": "G", "v": "T", "capacity": 16},
+            {"u": "H", "v": "T", "capacity": 15},
         ],
     }
 
 
-def generate_random_flow_network(num_nodes: int = 8, seed: int | None = None) -> dict[str, Any]:
+def generate_random_flow_network(num_nodes: int = 10, seed: int | None = None) -> dict[str, Any]:
     """Generate a random layered directed flow network from S to T."""
     rng = random.Random(seed)
-    num_nodes = max(6, min(12, num_nodes))
+    num_nodes = max(8, min(14, num_nodes))
 
-    num_layers = 3 if num_nodes <= 8 else 4
+    num_layers = 4 if num_nodes >= 9 else 3
     middle_count = num_nodes - 2
     nodes_per_layer = max(2, middle_count // (num_layers - 1))
 
-    nodes = [{"id": "S", "label": "S", "x": 80, "y": 160, "type": "source"}]
+    nodes = [{"id": "S", "label": "S", "x": 70, "y": 160, "type": "source"}]
     layers: list[list[str]] = [["S"]]
 
     chars = [chr(65 + i) for i in range(middle_count)]
     idx = 0
 
-    x_step = 480 / num_layers
+    x_step = 490 / num_layers
     for l_idx in range(1, num_layers):
         layer_nodes = []
         count = min(nodes_per_layer, len(chars) - idx) if l_idx < num_layers - 1 else len(chars) - idx
@@ -66,13 +73,13 @@ def generate_random_flow_network(num_nodes: int = 8, seed: int | None = None) ->
         for c_idx in range(count):
             node_id = chars[idx]
             idx += 1
-            x = round(80 + l_idx * x_step)
+            x = round(70 + l_idx * x_step)
             y = round(40 + (c_idx + 1) * y_step)
             nodes.append({"id": node_id, "label": node_id, "x": x, "y": y})
             layer_nodes.append(node_id)
         layers.append(layer_nodes)
 
-    nodes.append({"id": "T", "label": "T", "x": 560, "y": 160, "type": "sink"})
+    nodes.append({"id": "T", "label": "T", "x": 580, "y": 160, "type": "sink"})
     layers.append(["T"])
 
     # Connect forward layers to guarantee S-T connectivity

@@ -16,14 +16,14 @@ def test_default_flow_network_structure():
     net = get_default_flow_network()
     assert net["source"] == "S"
     assert net["sink"] == "T"
-    assert len(net["nodes"]) == 8
-    assert len(net["edges"]) >= 10
+    assert len(net["nodes"]) == 10
+    assert len(net["edges"]) >= 15
     cap = build_capacities(net)
-    assert cap["S"]["A"] == 10
+    assert cap["S"]["A"] == 12
 
 
 def test_random_flow_network_generator():
-    for n in (6, 8, 10):
+    for n in (8, 10, 12):
         net = generate_random_flow_network(n, seed=42)
         assert len(net["nodes"]) == n
         assert net["source"] == "S"
