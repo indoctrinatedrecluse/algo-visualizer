@@ -154,6 +154,12 @@ html, body {
   min-height: 0;
 }
 
+#flow-box { flex: 1 1 100%; min-height: 280px; }
+#flow-box.hidden { display: none; }
+#bst-box { flex: 1 1 100%; min-height: 280px; }
+#bst-box.hidden { display: none; }
+#graph-box { flex: 1 1 100%; min-height: 280px; }
+#graph-box.hidden { display: none; }
 #array-box { flex: 2 1 0; }
 #tree-box { flex: 2 1 0; }
 #bars-box { flex: 1 1 0; }

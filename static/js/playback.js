@@ -19,7 +19,7 @@ export class Player {
     this.cumStats = [];      // per-frame { compares, swaps }
     this.index = -1;
     this.playing = false;
-    this.sps = 30;           // steps per second
+    this.sps = 10;           // steps per second
     this.accum = 0;
     this.last = 0;
     this.onEnd = null;

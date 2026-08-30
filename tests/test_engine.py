@@ -145,6 +145,43 @@ def test_quick_sort_marks_every_element_sorted():
     assert marked == set(range(len(arr))), "every index should be marked sorted"
 
 
+def test_merge_sort_emits_partition_and_range_events():
+    """Merge sort must emit range/partition/merged frames that drive the
+    recursion-tree visualization."""
+    arr = [random.Random(5).randint(1, 100) for _ in range(32)]
+    result = engine.run_sort("merge_sort", arr)
+
+    partition_frames = [f for f in result["frames"] if f["type"] == "partition"]
+    assert partition_frames, "expected partition events in merge sort"
+    for f in partition_frames:
+        assert len(f["range"]) == 2
+        assert len(f["children"]) == 2
+        lo, hi = f["range"]
+        assert 0 <= lo < hi < len(arr)
+        (c1_lo, c1_hi), (c2_lo, c2_hi) = f["children"]
+        assert c1_lo == lo
+        assert c2_hi == hi
+        assert c1_hi + 1 == c2_lo
+
+    merged_frames = [f for f in result["frames"] if f["type"] == "merged"]
+    assert merged_frames, "expected merged events in merge sort"
+    for f in merged_frames:
+        assert len(f["range"]) == 2
+
+    assert any(f["type"] == "range" for f in result["frames"])
+
+
+def test_merge_sort_marks_every_element_sorted():
+    """Every index should be permanently marked 'sorted' when merge sort finishes."""
+    arr = [random.Random(13).randint(1, 100) for _ in range(45)]
+    result = engine.run_sort("merge_sort", arr)
+    marked = set()
+    for f in result["frames"]:
+        if f["type"] == "sorted":
+            marked.update(f["indices"])
+    assert marked == set(range(len(arr))), "every index should be marked sorted"
+
+
 # ---------------------------------------------------------------------------
 # Searching algorithms
 # ---------------------------------------------------------------------------

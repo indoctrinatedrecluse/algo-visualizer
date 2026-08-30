@@ -60,8 +60,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 try:
                     result = engine.run_sort(
                         message["algorithm"],
-                        message["array"],
-                        message.get("target"),
+                        array=message.get("array"),
+                        target=message.get("target"),
+                        graph_data=message.get("graph"),
+                        start=message.get("start"),
+                        tree_data=message.get("tree"),
+                        key=message.get("key"),
+                        flow_data=message.get("network"),
                     )
                     result["request_id"] = message.get("request_id")
                     await websocket.send_json({"type": "result", **result})

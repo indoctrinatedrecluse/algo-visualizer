@@ -85,11 +85,15 @@ the server live and reachable.
 ```
 main.py                  FastAPI app (static files, /api, /ws)
 engine.py                generator → frames; automatic line-number capture
-sorting/                 one file per algorithm + registry.py
+sorting/                 sorting algorithms + registry shim
+searching/               searching algorithms (linear, binary)
+graph/                   graph algorithms (Dijkstra, TSP) + utils
+tree/                    tree algorithms (AVL, Red-Black, Min-Heap, DSW) + utils
+flow/                    network flow algorithms (Edmonds-Karp, Dinic) + utils
 static/index.html        UI shell
-static/js/               api · canvas · playback · codePanel · main
+static/js/               api · renderers · graphRenderer · bstRenderer · flowRenderer · playback · codePanel · main
 static/vendor/prism/     vendored Prism (syntax highlighting, offline-safe)
-tests/test_engine.py     engine correctness + line-mapping tests
+tests/                   engine, API, graph, tree, and flow unit tests
 ```
 
 ## Roadmap
@@ -98,10 +102,16 @@ tests/test_engine.py     engine correctness + line-mapping tests
 - [x] Play/pause, step fwd/back, speed slider, skip to end, shuffle, size
 - [x] Compare/swap highlights with arrows, green "sorted" sweep
 - [x] Array (boxes-with-numbers) view with slide animations + bars overview
-- [x] Optimized quick sort (median-of-three + insertion cutoff) with a
-      dedicated recursion-tree view showing partitions and pivots
+- [x] Divide-and-conquer recursion-tree view for Quick Sort (partitions, pivots)
+      and Merge Sort (recursive splits, merges)
 - [x] Linear + binary search with a target input, search-range markers,
       found/not-found steps, and auto-sorting for binary search
+- [x] Graph visualization view with draggable nodes, edge weights, and live
+      path animations for Dijkstra's shortest path and Traveling Salesperson (TSP)
+- [x] Hierarchical Binary Search Tree, AVL tree, Red-Black Tree, and Min-Heap view with populated trees (12–18 nodes),
+      balance factors, color flips, rotations (LL, RR, LR, RL, DSW rebalance), and dual heap array view
+- [x] Layered Network Flow Canvas view with directed capacity edges ('f / c'), augmenting path animations,
+      bottleneck indicators, and (S, T) Minimum Cut dividing boundary for Edmonds-Karp and Dinic's Algorithm
 - [ ] True `sys.settrace` live-tracing mode
-- [ ] More algorithms (heap sort, radix sort, Bogo sort…)
+- [ ] More algorithms (radix sort, Bogo sort…)
 - [ ] Dual/auxiliary-array visualization for merge sort

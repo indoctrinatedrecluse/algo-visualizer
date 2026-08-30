@@ -318,12 +318,12 @@ export class ArrayRenderer {
 }
 
 // ---------------------------------------------------------------------------
-// Recursion tree: the quick-sort divide-and-conquer structure.
+// Recursion tree: the divide-and-conquer structure (Quick Sort, Merge Sort).
 //
 // Every node is a subarray [lo..hi] drawn as a segment at its recursion
-// depth. Partitions split a node into two children; pivot positions are
-// marked with an orange tick; the currently-processed range is highlighted;
-// ranges whose elements are all permanently sorted turn green.
+// depth. Splits/partitions divide a node into children; pivot positions are
+// marked with an orange tick (quick sort); the currently-processed range is
+// highlighted in blue; completed/merged ranges turn green.
 // ---------------------------------------------------------------------------
 export class TreeRenderer {
   constructor(canvas) {
@@ -373,7 +373,7 @@ export class TreeRenderer {
     if (!this._tree) {
       const n = frames[0] ? frames[0].array.length : 0;
       if (!n) return;
-      this._tree = { lo: 0, hi: n - 1, children: [], pivot: null };
+      this._tree = { lo: 0, hi: n - 1, children: [], pivot: null, merged: false };
       this._builtUpTo = -1;
     }
 
@@ -406,10 +406,11 @@ export class TreeRenderer {
     if (!node) return;
     if (f.type === "partition" && Array.isArray(f.children) && f.children.length === 2) {
       node.children = f.children
-        .map(([a, b]) => ({ lo: a, hi: b, children: [], pivot: null }))
+        .map(([a, b]) => ({ lo: a, hi: b, children: [], pivot: null, merged: false }))
         .filter((c) => c.lo <= c.hi);
     }
     if (f.type === "pivot") node.pivot = f.indices[0];
+    if (f.type === "merged") node.merged = true;
   }
 
   drawTree(tree, w, h, sortedFlags, activeNode) {
@@ -420,7 +421,9 @@ export class TreeRenderer {
     let maxDepth = 0;
     const markDone = (node, depth) => {
       maxDepth = Math.max(maxDepth, depth);
-      if (node.children.length) {
+      if (node.merged) {
+        node.done = true;
+      } else if (node.children.length) {
         node.done = node.children.every((c) => markDone(c, depth + 1));
       } else {
         node.done = true;
@@ -500,22 +503,33 @@ export class TreeRenderer {
     drawNode(tree, 0);
 
     // Legend.
+    const hasPivots = (node) => node.pivot != null || node.children.some(hasPivots);
+    const showPivot = hasPivots(tree);
+
     ctx.font = "10px Consolas, monospace";
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     const ly = h - 15;
-    ctx.fillStyle = PIVOT_COLOR;
-    ctx.fillRect(padX, ly, 9, 9);
-    ctx.fillStyle = "#8b949e";
-    ctx.fillText("pivot", padX + 13, ly - 1);
+    let lx = padX;
+
+    if (showPivot) {
+      ctx.fillStyle = PIVOT_COLOR;
+      ctx.fillRect(lx, ly, 9, 9);
+      ctx.fillStyle = "#8b949e";
+      ctx.fillText("pivot", lx + 13, ly - 1);
+      lx += 57;
+    }
+
     ctx.fillStyle = "#58a6ff";
-    ctx.fillRect(padX + 57, ly, 9, 9);
+    ctx.fillRect(lx, ly, 9, 9);
     ctx.fillStyle = "#8b949e";
-    ctx.fillText("active", padX + 70, ly - 1);
+    ctx.fillText("active", lx + 13, ly - 1);
+    lx += 55;
+
     ctx.fillStyle = SORTED_COLOR;
-    ctx.fillRect(padX + 112, ly, 9, 9);
+    ctx.fillRect(lx, ly, 9, 9);
     ctx.fillStyle = "#8b949e";
-    ctx.fillText("done", padX + 125, ly - 1);
+    ctx.fillText("done", lx + 13, ly - 1);
   }
 }
 

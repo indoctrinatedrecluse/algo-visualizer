@@ -26,7 +26,23 @@
       <input type="number" id="target-input" min="0" max="200" step="1" value="15" />
     </div>
 
-    <button id="randomize-btn" title="New random array">Shuffle</button>
+    <div class="group hidden" id="start-node-group">
+      <label for="start-node-select">Start</label>
+      <select id="start-node-select"></select>
+    </div>
+
+    <div class="group hidden" id="target-node-group">
+      <label for="target-node-select">Target</label>
+      <select id="target-node-select"></select>
+    </div>
+
+    <div class="group hidden" id="tree-key-group">
+      <label for="tree-key-input">Key <span id="tree-key-label">53</span></label>
+      <input type="number" id="tree-key-input" min="1" max="999" value="53"
+             title="Key value to insert or delete in the binary search tree" />
+    </div>
+
+    <button id="randomize-btn" title="New random array or graph">Shuffle</button>
     <button id="sort-btn" class="primary" title="Run the selected algorithm">Sort</button>
 
     <div class="divider"></div>
@@ -39,9 +55,9 @@
     <div class="divider"></div>
 
     <div class="group">
-      <label for="speed-slider">Speed <span id="speed-label">30</span></label>
-      <input type="range" id="speed-slider" min="1" max="300" value="30" />
-      <input type="number" id="speed-input" min="1" max="300" step="1" value="30"
+      <label for="speed-slider">Speed <span id="speed-label">10</span></label>
+      <input type="range" id="speed-slider" min="1" max="300" value="10" />
+      <input type="number" id="speed-input" min="1" max="300" step="1" value="10"
              title="Steps per second — type a value and press Enter" />
     </div>
   </header>
@@ -64,12 +80,24 @@
 
   <main id="panels">
     <div id="viz-column">
+      <section id="flow-box" class="viz-box hidden">
+        <div class="viz-header" id="flow-header">Network Flow · Edmonds-Karp Max Flow / Min-Cut</div>
+        <div class="viz-body"><canvas id="flow-canvas"></canvas></div>
+      </section>
+      <section id="bst-box" class="viz-box hidden">
+        <div class="viz-header" id="bst-header">Binary Search Tree · AVL Tree</div>
+        <div class="viz-body"><canvas id="bst-canvas"></canvas></div>
+      </section>
+      <section id="graph-box" class="viz-box hidden">
+        <div class="viz-header" id="graph-header">Graph View · Dijkstra Shortest Path</div>
+        <div class="viz-body"><canvas id="graph-canvas"></canvas></div>
+      </section>
       <section id="array-box" class="viz-box">
         <div class="viz-header">Array view</div>
         <div class="viz-body"><canvas id="array-canvas"></canvas></div>
       </section>
       <section id="tree-box" class="viz-box hidden">
-        <div class="viz-header">Recursion · Quick Sort</div>
+        <div class="viz-header" id="tree-header">Recursion Tree</div>
         <div class="viz-body"><canvas id="tree-canvas"></canvas></div>
       </section>
       <section id="bars-box" class="viz-box">

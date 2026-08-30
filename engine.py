@@ -14,10 +14,11 @@ both the canvas visualization and the synchronized code highlight::
         "message": "Swap 8 and 3",
     }
 
-Quick sort adds two optional fields for the recursion-tree view:
-``range`` ([lo, hi] of the active subarray) and ``children`` (the two
-subranges produced by a partition).  Binary search uses ``range`` for the
-active search range; searching algorithms accept a ``target`` value.
+Divide-and-conquer algorithms (Quick Sort, Merge Sort) add optional
+fields for the recursion-tree view: ``range`` ([lo, hi] of the active
+subarray) and ``children`` (the two subranges produced by a split).
+Binary search uses ``range`` for the active search range; searching
+algorithms accept a ``target`` value.
 """
 
 from __future__ import annotations
@@ -25,42 +26,86 @@ from __future__ import annotations
 import inspect
 from typing import Any
 
-from registry import ALGORITHMS, SEARCHING
+from registry import ALGORITHMS, FLOW, GRAPH, SEARCHING, TREE
 
-# Import both packages so all algorithms register themselves.
+# Import packages so all algorithms register themselves.
+import flow  # noqa: F401
+import graph  # noqa: F401
 import searching  # noqa: F401
 import sorting  # noqa: F401
+import tree  # noqa: F401
 
 # Hard safety cap so a single WebSocket message cannot exhaust the server.
 MAX_ELEMENTS = 400
 
 
-def run_sort(algorithm: str, array: list, target: Any = None) -> dict[str, Any]:
-    """Execute ``algorithm`` on a copy of ``array``; return frames + stats.
+def run_sort(
+    algorithm: str,
+    array: list | None = None,
+    target: Any = None,
+    graph_data: dict[str, Any] | None = None,
+    start: str | None = None,
+    tree_data: dict[str, Any] | None = None,
+    key: Any = None,
+    flow_data: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Execute ``algorithm``; return frames + stats.
 
-    ``target`` is required for searching algorithms (``category == searching``)
-    and ignored otherwise.
-
-    Raises:
-        ValueError: unknown algorithm, empty array, oversized array, or a
-            searching algorithm called without a target.
+    Supports sorting, searching, graph, tree, and network flow algorithms.
     """
     if algorithm not in ALGORITHMS:
         raise ValueError(f"Unknown algorithm: {algorithm!r}")
 
-    arr = [int(x) for x in array]
-    if not arr:
-        raise ValueError("Array must not be empty")
-    if len(arr) > MAX_ELEMENTS:
-        raise ValueError(f"Array too large: {len(arr)} elements (max {MAX_ELEMENTS})")
-
     info = ALGORITHMS[algorithm]
-    if info.category == SEARCHING:
+
+    if info.category == GRAPH:
+        g = graph_data if graph_data is not None else graph.get_default_graph()
+        s = str(start) if start else "A"
+        t = str(target) if target else None
+        gen = info.fn(g, s, t)
+        arr = []
+    elif info.category == FLOW:
+        net = flow_data if flow_data is not None else flow.get_default_flow_network()
+        s = str(start) if start else net.get("source", "S")
+        t = str(target) if target else net.get("sink", "T")
+        gen = info.fn(net, s, t)
+        arr = []
+    elif info.category == TREE:
+        t_data = tree_data
+        k = key if key is not None else target
+        if k is None:
+            k = 53 if info.name == "avl_insert" else 25
+        try:
+            k_int = int(k)
+        except (ValueError, TypeError):
+            k_int = 53
+        params = inspect.signature(info.fn).parameters
+        if "key" in params:
+            gen = info.fn(t_data, k_int)
+        else:
+            gen = info.fn(t_data)
+        arr = []
+        target = k_int
+    elif info.category == SEARCHING:
+        if array is None:
+            raise ValueError("Array must not be empty")
+        arr = [int(x) for x in array]
+        if not arr:
+            raise ValueError("Array must not be empty")
+        if len(arr) > MAX_ELEMENTS:
+            raise ValueError(f"Array too large: {len(arr)} elements (max {MAX_ELEMENTS})")
         if target is None:
             raise ValueError(f"{info.display_name} requires a target value")
         target = int(target)
         gen = info.fn(arr, target)
     else:
+        if array is None:
+            raise ValueError("Array must not be empty")
+        arr = [int(x) for x in array]
+        if not arr:
+            raise ValueError("Array must not be empty")
+        if len(arr) > MAX_ELEMENTS:
+            raise ValueError(f"Array too large: {len(arr)} elements (max {MAX_ELEMENTS})")
         target = None
         gen = info.fn(arr)
 
@@ -78,28 +123,55 @@ def run_sort(algorithm: str, array: list, target: Any = None) -> dict[str, Any]:
         # knows the exact source line -- the code highlight can never drift.
         line = gen.gi_frame.f_lineno
 
-        if step.type == "compare":
+        if step.type in ("compare", "relax", "augment"):
             comparisons += 1
-        elif step.type == "swap":
+        elif step.type in ("swap", "rotate_left", "rotate_right", "push_flow"):
             swaps += 1
 
-        frames.append(
-            {
-                "array": list(arr),
-                "line": line,
-                "indices": list(step.indices),
-                "type": step.type,
-                "message": step.message,
-            }
-        )
+        frame: dict[str, Any] = {
+            "line": line,
+            "type": step.type,
+            "message": step.message,
+        }
 
-        # Quick-sort-specific fields for the recursion-tree view.
-        if step.range:
-            frames[-1]["range"] = list(step.range)
-        if step.children:
-            frames[-1]["children"] = [list(child) for child in step.children]
+        if info.category == GRAPH:
+            frame["active_node"] = step.active_node
+            frame["active_edge"] = list(step.active_edge) if step.active_edge else None
+            frame["relaxed_edge"] = list(step.relaxed_edge) if step.relaxed_edge else None
+            frame["path"] = list(step.path)
+            frame["tour"] = list(step.tour)
+            frame["dist"] = (
+                {k: (int(v) if v != float("inf") else "∞") for k, v in step.dist.items()}
+                if step.dist
+                else {}
+            )
+            frame["prev"] = step.prev
+            frame["state"] = step.state
+        elif info.category == FLOW:
+            frame["flow"] = step.flow
+            frame["capacity"] = step.capacity
+            frame["augmenting_path"] = list(step.augmenting_path)
+            frame["bottleneck"] = step.bottleneck
+            frame["min_cut"] = list(step.min_cut) if step.min_cut else None
+            frame["total_flow"] = step.total_flow
+            frame["levels"] = step.levels
+        elif info.category == TREE:
+            frame["tree"] = step.tree
+            frame["rotation"] = step.rotation
+            frame["highlight_nodes"] = step.highlight_nodes
+            frame["active_val"] = step.active_val
+            frame["node_colors"] = step.node_colors
+        else:
+            frame["array"] = list(arr)
+            frame["indices"] = list(step.indices)
+            if step.range:
+                frame["range"] = list(step.range)
+            if step.children:
+                frame["children"] = [list(child) for child in step.children]
 
-    return {
+        frames.append(frame)
+
+    result: dict[str, Any] = {
         "frames": frames,
         "stats": {
             "comparisons": comparisons,
@@ -109,6 +181,19 @@ def run_sort(algorithm: str, array: list, target: Any = None) -> dict[str, Any]:
         "category": info.category,
         "target": target,
     }
+
+    if info.category == GRAPH:
+        result["graph"] = g
+        result["start"] = s
+        result["target"] = t
+    elif info.category == FLOW:
+        result["network"] = net
+        result["total_flow"] = step.total_flow if frames else 0
+        result["min_cut"] = step.min_cut if frames else None
+    elif info.category == TREE:
+        result["key"] = target
+
+    return result
 
 
 def list_algorithms() -> list[dict[str, Any]]:
