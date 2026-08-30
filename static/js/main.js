@@ -84,6 +84,7 @@ let algoMeta = {};        // name -> metadata from /api/algorithms
 let currentAlgo = null;   // metadata of the selected algorithm
 let currentTarget = null; // search target value
 
+// ---- Tree & Graph Presets ------------------------------------------------
 const DEFAULT_GRAPH = {
   nodes: [
     { id: "A", label: "A", x: 70, y: 70 },
@@ -124,37 +125,37 @@ const DEFAULT_FLOW_NETWORK = {
   source: "S",
   sink: "T",
   nodes: [
-    {"id": "S", "label": "S", "x": 70, "y": 160, "type": "source"},
-    {"id": "A", "label": "A", "x": 200, "y": 65},
-    {"id": "B", "label": "B", "x": 200, "y": 160},
-    {"id": "C", "label": "C", "x": 200, "y": 255},
-    {"id": "D", "label": "D", "x": 340, "y": 65},
-    {"id": "E", "label": "E", "x": 340, "y": 160},
-    {"id": "F", "label": "F", "x": 340, "y": 255},
-    {"id": "G", "label": "G", "x": 470, "y": 100},
-    {"id": "H", "label": "H", "x": 470, "y": 220},
-    {"id": "T", "label": "T", "x": 580, "y": 160, "type": "sink"},
+    { id: "S", label: "S", x: 70, y: 160, type: "source" },
+    { id: "A", label: "A", x: 200, y: 65 },
+    { id: "B", label: "B", x: 200, y: 160 },
+    { id: "C", label: "C", x: 200, y: 255 },
+    { id: "D", label: "D", x: 340, y: 65 },
+    { id: "E", label: "E", x: 340, y: 160 },
+    { id: "F", label: "F", x: 340, y: 255 },
+    { id: "G", label: "G", x: 470, y: 100 },
+    { id: "H", label: "H", x: 470, y: 220 },
+    { id: "T", label: "T", x: 580, y: 160, type: "sink" },
   ],
   edges: [
-    {"u": "S", "v": "A", "capacity": 12},
-    {"u": "S", "v": "B", "capacity": 8},
-    {"u": "S", "v": "C", "capacity": 14},
-    {"u": "A", "v": "D", "capacity": 9},
-    {"u": "A", "v": "E", "capacity": 4},
-    {"u": "A", "v": "B", "capacity": 3},
-    {"u": "B", "v": "D", "capacity": 3},
-    {"u": "B", "v": "E", "capacity": 7},
-    {"u": "B", "v": "F", "capacity": 4},
-    {"u": "C", "v": "E", "capacity": 5},
-    {"u": "C", "v": "F", "capacity": 11},
-    {"u": "D", "v": "G", "capacity": 10},
-    {"u": "D", "v": "E", "capacity": 4},
-    {"u": "E", "v": "G", "capacity": 6},
-    {"u": "E", "v": "H", "capacity": 8},
-    {"u": "E", "v": "F", "capacity": 2},
-    {"u": "F", "v": "H", "capacity": 10},
-    {"u": "G", "v": "T", "capacity": 16},
-    {"u": "H", "v": "T", "capacity": 15},
+    { u: "S", v: "A", capacity: 12 },
+    { u: "S", v: "B", capacity: 8 },
+    { u: "S", v: "C", capacity: 14 },
+    { u: "A", v: "D", capacity: 9 },
+    { u: "A", v: "E", capacity: 4 },
+    { u: "A", v: "B", capacity: 3 },
+    { u: "B", v: "D", capacity: 3 },
+    { u: "B", v: "E", capacity: 7 },
+    { u: "B", v: "F", capacity: 4 },
+    { u: "C", v: "E", capacity: 5 },
+    { u: "C", v: "F", capacity: 11 },
+    { u: "D", v: "G", capacity: 10 },
+    { u: "D", v: "E", capacity: 4 },
+    { u: "E", v: "G", capacity: 6 },
+    { u: "E", v: "H", capacity: 8 },
+    { u: "E", v: "F", capacity: 2 },
+    { u: "F", v: "H", capacity: 10 },
+    { u: "G", v: "T", capacity: 16 },
+    { u: "H", v: "T", capacity: 15 },
   ],
 };
 
@@ -174,6 +175,196 @@ const DEFAULT_MATCHING_PREFS = {
     W4: ["M3", "M5", "M4", "M1", "M2", "M6"],
     W5: ["M6", "M4", "M5", "M2", "M3", "M1"],
     W6: ["M5", "M6", "M1", "M3", "M2", "M4"],
+  },
+};
+
+const DEFAULT_AVL_TREE = {
+  val: 50,
+  height: 4,
+  bf: 0,
+  left: {
+    val: 25,
+    height: 3,
+    bf: 0,
+    left: {
+      val: 12,
+      height: 2,
+      bf: 0,
+      left: { val: 6, height: 1, bf: 0, left: null, right: null },
+      right: { val: 18, height: 1, bf: 0, left: null, right: null },
+    },
+    right: {
+      val: 37,
+      height: 2,
+      bf: 0,
+      left: { val: 31, height: 1, bf: 0, left: null, right: null },
+      right: { val: 43, height: 1, bf: 0, left: null, right: null },
+    },
+  },
+  right: {
+    val: 75,
+    height: 3,
+    bf: 0,
+    left: {
+      val: 62,
+      height: 2,
+      bf: 0,
+      left: { val: 56, height: 1, bf: 0, left: null, right: null },
+      right: { val: 68, height: 1, bf: 0, left: null, right: null },
+    },
+    right: {
+      val: 87,
+      height: 2,
+      bf: 0,
+      left: { val: 81, height: 1, bf: 0, left: null, right: null },
+      right: { val: 93, height: 1, bf: 0, left: null, right: null },
+    },
+  },
+};
+
+const DEFAULT_RB_TREE = {
+  val: 50,
+  color: "BLACK",
+  height: 4,
+  bf: 0,
+  left: {
+    val: 25,
+    color: "RED",
+    height: 3,
+    bf: 0,
+    left: {
+      val: 12,
+      color: "BLACK",
+      height: 2,
+      bf: 0,
+      left: { val: 6, color: "RED", height: 1, bf: 0, left: null, right: null },
+      right: { val: 18, color: "RED", height: 1, bf: 0, left: null, right: null },
+    },
+    right: {
+      val: 37,
+      color: "BLACK",
+      height: 2,
+      bf: 0,
+      left: { val: 31, color: "RED", height: 1, bf: 0, left: null, right: null },
+      right: null,
+    },
+  },
+  right: {
+    val: 75,
+    color: "RED",
+    height: 3,
+    bf: 0,
+    left: {
+      val: 62,
+      color: "BLACK",
+      height: 2,
+      bf: 0,
+      left: { val: 56, color: "RED", height: 1, bf: 0, left: null, right: null },
+      right: { val: 68, color: "RED", height: 1, bf: 0, left: null, right: null },
+    },
+    right: {
+      val: 87,
+      color: "BLACK",
+      height: 2,
+      bf: 0,
+      left: { val: 81, color: "RED", height: 1, bf: 0, left: null, right: null },
+      right: null,
+    },
+  },
+};
+
+const DEFAULT_HEAP_TREE = {
+  val: 4,
+  heap_idx: 0,
+  height: 4,
+  bf: 0,
+  left: {
+    val: 7,
+    heap_idx: 1,
+    height: 3,
+    bf: 0,
+    left: {
+      val: 15,
+      heap_idx: 3,
+      height: 2,
+      bf: 0,
+      left: { val: 29, heap_idx: 7, height: 1, bf: 0, left: null, right: null },
+      right: { val: 34, heap_idx: 8, height: 1, bf: 0, left: null, right: null },
+    },
+    right: {
+      val: 9,
+      heap_idx: 4,
+      height: 2,
+      bf: 0,
+      left: { val: 22, heap_idx: 9, height: 1, bf: 0, left: null, right: null },
+      right: { val: 16, heap_idx: 10, height: 1, bf: 0, left: null, right: null },
+    },
+  },
+  right: {
+    val: 12,
+    heap_idx: 2,
+    height: 3,
+    bf: 0,
+    left: {
+      val: 21,
+      heap_idx: 5,
+      height: 2,
+      bf: 0,
+      left: { val: 25, heap_idx: 11, height: 1, bf: 0, left: null, right: null },
+      right: { val: 30, heap_idx: 12, height: 1, bf: 0, left: null, right: null },
+    },
+    right: {
+      val: 18,
+      heap_idx: 6,
+      height: 2,
+      bf: 0,
+      left: { val: 42, heap_idx: 13, height: 1, bf: 0, left: null, right: null },
+      right: { val: 38, heap_idx: 14, height: 1, bf: 0, left: null, right: null },
+    },
+  },
+};
+
+const DEFAULT_UNBALANCED_TREE = {
+  val: 10,
+  height: 8,
+  bf: -7,
+  left: { val: 5, height: 1, bf: 0, left: null, right: null },
+  right: {
+    val: 20,
+    height: 7,
+    bf: -6,
+    left: { val: 15, height: 1, bf: 0, left: null, right: null },
+    right: {
+      val: 30,
+      height: 6,
+      bf: -5,
+      left: { val: 25, height: 1, bf: 0, left: null, right: null },
+      right: {
+        val: 40,
+        height: 5,
+        bf: -4,
+        left: { val: 35, height: 1, bf: 0, left: null, right: null },
+        right: {
+          val: 50,
+          height: 4,
+          bf: -3,
+          left: { val: 45, height: 1, bf: 0, left: null, right: null },
+          right: {
+            val: 60,
+            height: 3,
+            bf: -2,
+            left: { val: 55, height: 1, bf: 0, left: null, right: null },
+            right: {
+              val: 70,
+              height: 2,
+              bf: 1,
+              left: { val: 65, height: 1, bf: 0, left: null, right: null },
+              right: null,
+            },
+          },
+        },
+      },
+    },
   },
 };
 
@@ -262,7 +453,19 @@ const player = new Player((frame, prev, progress, sortedFlags) => {
 
 player.onEnd = () => {
   const last = player.frames[player.index];
-  if (last?.message) els.status.textContent = last.message;
+  if (currentAlgo?.category === "matching") {
+    els.status.textContent = last?.message || "Stable matching complete ✓";
+  } else if (currentAlgo?.category === "flow") {
+    els.status.textContent = last?.message || "Maximum flow computation complete ✓";
+  } else if (currentAlgo?.category === "tree") {
+    els.status.textContent = last?.message || "Tree operation complete ✓";
+  } else if (currentAlgo?.category === "graph") {
+    els.status.textContent = last?.message || "Graph search complete ✓";
+  } else if (currentAlgo?.category === "searching") {
+    els.status.textContent = last?.type === "found" ? "Target found ✓" : "Target not found";
+  } else {
+    els.status.textContent = last?.message || "Execution complete ✓";
+  }
   els.play.textContent = "▶ Play";
 };
 
@@ -326,8 +529,197 @@ function randomArray(n) {
   return arr;
 }
 
+function randomGraph(numNodes = 10) {
+  const count = Math.max(6, Math.min(14, numNodes));
+  const labels = Array.from({ length: count }, (_, i) => String.fromCharCode(65 + i));
+  const nodes = [];
+  const centerX = 320, centerY = 150;
+  const radiusX = 220, radiusY = 100;
+
+  for (let i = 0; i < count; i++) {
+    const angle = (2 * Math.PI * i) / count + (Math.random() - 0.5) * 0.3;
+    const rx = radiusX * (0.8 + Math.random() * 0.25);
+    const ry = radiusY * (0.8 + Math.random() * 0.25);
+    nodes.push({
+      id: labels[i],
+      label: labels[i],
+      x: Math.round(Math.max(60, Math.min(580, centerX + rx * Math.cos(angle)))),
+      y: Math.round(Math.max(50, Math.min(260, centerY + ry * Math.sin(angle)))),
+    });
+  }
+
+  const coords = new Map(nodes.map((nd) => [nd.id, { x: nd.x, y: nd.y }]));
+  const calcWeight = (u, v) => {
+    const p1 = coords.get(u), p2 = coords.get(v);
+    const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    return Math.max(1, Math.min(15, Math.round(dist / 32) + Math.floor(Math.random() * 3) - 1));
+  };
+
+  const edges = [];
+  const edgeSet = new Set();
+  const shuffled = [...labels].sort(() => Math.random() - 0.5);
+  const connected = [shuffled[0]];
+  const unconnected = shuffled.slice(1);
+
+  while (unconnected.length) {
+    const u = connected[Math.floor(Math.random() * connected.length)];
+    const v = unconnected.pop();
+    connected.push(v);
+    const k = u < v ? `${u}-${v}` : `${v}-${u}`;
+    edgeSet.add(k);
+    edges.push({ u: u < v ? u : v, v: u < v ? v : u, weight: calcWeight(u, v) });
+  }
+
+  const extraEdges = Math.floor(count * 0.8);
+  for (let i = 0; i < extraEdges; i++) {
+    const u = labels[Math.floor(Math.random() * count)];
+    const v = labels[Math.floor(Math.random() * count)];
+    if (u !== v) {
+      const k = u < v ? `${u}-${v}` : `${v}-${u}`;
+      if (!edgeSet.has(k)) {
+        edgeSet.add(k);
+        edges.push({ u: u < v ? u : v, v: u < v ? v : u, weight: calcWeight(u, v) });
+      }
+    }
+  }
+
+  return { nodes, edges };
+}
+
+function randomFlowNetwork(numNodes = 10) {
+  const count = Math.max(8, Math.min(14, numNodes));
+  const chars = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+  const nodes = [{ id: "S", label: "S", x: 70, y: 160, type: "source" }];
+
+  const internalCount = count - 2;
+  const numLayers = Math.max(2, Math.min(4, Math.ceil(internalCount / 3)));
+  const layers = [["S"]];
+  let idx = 0;
+  const xStep = 440 / (numLayers + 1);
+
+  for (let l = 1; l <= numLayers; l++) {
+    const layerNodes = [];
+    const remainingLayers = numLayers - l + 1;
+    const remainingNodes = internalCount - idx;
+    const nInLayer = Math.max(1, Math.min(4, Math.round(remainingNodes / remainingLayers)));
+    const yStep = 240 / (nInLayer + 1);
+    for (let c = 0; c < nInLayer; c++) {
+      const id = chars[idx++];
+      const x = Math.round(70 + l * xStep);
+      const y = Math.round(40 + (c + 1) * yStep);
+      nodes.push({ id, label: id, x, y });
+      layerNodes.push(id);
+    }
+    layers.push(layerNodes);
+  }
+
+  nodes.push({ id: "T", label: "T", x: 580, y: 160, type: "sink" });
+  layers.push(["T"]);
+
+  const edges = [];
+  const edgeSet = new Set();
+
+  for (let l = 0; l < layers.length - 1; l++) {
+    const currLayer = layers[l];
+    const nextLayer = layers[l + 1];
+    for (const u of currLayer) {
+      const v = nextLayer[Math.floor(Math.random() * nextLayer.length)];
+      const cap = Math.floor(5 + Math.random() * 15);
+      edges.push({ u, v, capacity: cap });
+      edgeSet.add(`${u}-${v}`);
+    }
+    for (const v of nextLayer) {
+      if (!edges.some((e) => e.v === v && currLayer.includes(e.u))) {
+        const u = currLayer[Math.floor(Math.random() * currLayer.length)];
+        if (!edgeSet.has(`${u}-${v}`)) {
+          const cap = Math.floor(5 + Math.random() * 15);
+          edges.push({ u, v, capacity: cap });
+          edgeSet.add(`${u}-${v}`);
+        }
+      }
+    }
+  }
+
+  return { source: "S", sink: "T", nodes, edges };
+}
+
+function randomPreferences(n = 6) {
+  const count = Math.max(4, Math.min(8, n));
+  const proposers = Array.from({ length: count }, (_, i) => `M${i + 1}`);
+  const reviewers = Array.from({ length: count }, (_, i) => `W${i + 1}`);
+
+  const pPrefs = {};
+  for (const p of proposers) {
+    pPrefs[p] = [...reviewers].sort(() => Math.random() - 0.5);
+  }
+  const rPrefs = {};
+  for (const r of reviewers) {
+    rPrefs[r] = [...proposers].sort(() => Math.random() - 0.5);
+  }
+  return { proposers: pPrefs, reviewers: rPrefs };
+}
+
+function randomTree(numNodes = 15) {
+  const count = Math.max(8, Math.min(24, numNodes));
+  const vals = new Set();
+  while (vals.size < count) {
+    vals.add(Math.floor(10 + Math.random() * 89));
+  }
+  const sorted = [...vals].sort((a, b) => a - b);
+
+  function build(lo, hi) {
+    if (lo > hi) return null;
+    const mid = Math.floor((lo + hi) / 2);
+    const left = build(lo, mid - 1);
+    const right = build(mid + 1, hi);
+    const lh = left ? left.height : 0;
+    const rh = right ? right.height : 0;
+    return {
+      val: sorted[mid],
+      height: 1 + Math.max(lh, rh),
+      bf: lh - rh,
+      left,
+      right,
+    };
+  }
+
+  return build(0, sorted.length - 1);
+}
+
+function updateNodeSelects() {
+  if (!currentGraph || !currentGraph.nodes) return;
+  const nodes = currentGraph.nodes.map((n) => n.id);
+  const curStart = els.startNodeSelect.value || nodes[0];
+  const curTarget = els.targetNodeSelect.value || nodes[nodes.length - 1];
+
+  els.startNodeSelect.innerHTML = "";
+  els.targetNodeSelect.innerHTML = "";
+
+  for (const n of nodes) {
+    const opt1 = document.createElement("option");
+    opt1.value = n;
+    opt1.textContent = n;
+    els.startNodeSelect.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = n;
+    opt2.textContent = n;
+    els.targetNodeSelect.appendChild(opt2);
+  }
+
+  els.startNodeSelect.value = nodes.includes(curStart) ? curStart : nodes[0];
+  els.targetNodeSelect.value = nodes.includes(curTarget) ? curTarget : nodes[nodes.length - 1];
+  graphRenderer.startNode = els.startNodeSelect.value;
+  graphRenderer.targetNode = els.targetNodeSelect.value;
+}
+
 function randomize() {
+  const isMatching = currentAlgo?.category === "matching";
+  const isGraph = currentAlgo?.category === "graph";
+  const isTree = currentAlgo?.category === "tree";
+  const isFlow = currentAlgo?.category === "flow";
   const name = currentAlgo?.name;
+
   player.frames = [];
   player.index = -1;
   player.playing = false;
@@ -341,7 +733,7 @@ function randomize() {
       const w = 5 + Math.floor(Math.random() * 25);
       const v = 20 + Math.floor(Math.random() * 120);
       totW += w;
-      items.append ? items.push({ id: String.fromCharCode(65 + i), weight: w, value: v, ratio: +(v / w).toFixed(2), status: "pending" }) : items.push({ id: String.fromCharCode(65 + i), weight: w, value: v, ratio: +(v / w).toFixed(2), status: "pending" });
+      items.push({ id: String.fromCharCode(65 + i), weight: w, value: v, ratio: +(v / w).toFixed(2), status: "pending" });
     }
     const cap = Math.round(totW * 0.55);
     currentCustomData = { capacity: cap, items };
@@ -378,43 +770,69 @@ function randomize() {
     els.targetInput.value = "0";
     updateTargetChip();
     renderIdle();
+    els.status.textContent = `3-Sum array loaded — press ${els.sort.textContent}`;
   } else if (name === "four_sum") {
     currentArray = [-3, -2, -1, -1, 0, 0, 1, 1, 2, 3];
     els.targetInput.value = "0";
     updateTargetChip();
     renderIdle();
+    els.status.textContent = `4-Sum array loaded — press ${els.sort.textContent}`;
   } else if (name === "fibonacci") {
     const n = Number(els.sizeSlider.value) || 15;
     currentArray = new Array(n + 1).fill(0);
     renderIdle();
+    els.status.textContent = `Fibonacci DP table size ${n} — press ${els.sort.textContent}`;
   } else if (name === "lis") {
     currentArray = [10, 22, 9, 33, 21, 50, 41, 60, 80];
     renderIdle();
+    els.status.textContent = `LIS array loaded — press ${els.sort.textContent}`;
   } else if (name === "coin_change_greedy") {
     currentArray = [25, 10, 5, 1];
     els.targetInput.value = "67";
     updateTargetChip();
     renderIdle();
+    els.status.textContent = `Greedy Coin Change for 67¢ — press ${els.sort.textContent}`;
   } else if (name === "coin_change_dp") {
     currentArray = [1, 2, 5, 10];
     els.targetInput.value = "18";
     updateTargetChip();
     renderIdle();
-  } else if (currentAlgo?.category === "matching") {
-    currentPreferences = DEFAULT_MATCHING_PREFS;
+    els.status.textContent = `DP Coin Change for 18¢ — press ${els.sort.textContent}`;
+  } else if (isMatching) {
+    currentPreferences = randomPreferences(6);
     matchingRenderer.setPreferences(currentPreferences);
-  } else if (currentAlgo?.category === "flow") {
-    currentNetwork = DEFAULT_FLOW_NETWORK;
+    els.status.textContent = `Randomized preferences (6 pairs) — press ${els.sort.textContent} to run`;
+  } else if (isFlow) {
+    const n = Math.min(14, Math.max(8, Math.round(Number(els.sizeSlider.value) / 7) || 10));
+    currentNetwork = randomFlowNetwork(n);
     flowRenderer.setNetwork(currentNetwork);
-  } else if (currentAlgo?.category === "graph") {
-    currentGraph = DEFAULT_GRAPH;
-    graphRenderer.setGraph(currentGraph);
+    els.status.textContent = `Flow network loaded (${currentNetwork.nodes.length} nodes) — press ${els.sort.textContent} to run`;
+  } else if (isTree) {
+    const n = Math.min(24, Math.max(8, Math.round(Number(els.sizeSlider.value)) || 15));
+    if (currentAlgo.name === "dsw_rebalance") {
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_UNBALANCED_TREE));
+    } else if (currentAlgo.name === "rb_insert") {
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_RB_TREE));
+    } else if (currentAlgo.name.startsWith("min_heap")) {
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_HEAP_TREE));
+    } else {
+      currentTree = randomTree(n);
+    }
+    bstRenderer.setTree(currentTree);
+    els.status.textContent = `Tree loaded (${currentAlgo.display_name}) — press ${els.sort.textContent} to run`;
+  } else if (isGraph) {
+    const n = Math.min(14, Math.max(8, Math.round(Number(els.sizeSlider.value) / 7) || 10));
+    currentGraph = randomGraph(n);
+    updateNodeSelects();
+    graphRenderer.setGraph(currentGraph, els.startNodeSelect.value, els.targetNodeSelect.value);
+    els.status.textContent = `${currentGraph.nodes.length} nodes, ${currentGraph.edges.length} edges — press ${els.sort.textContent} to run`;
   } else {
     const n = Number(els.sizeSlider.value);
     els.sizeLabel.textContent = String(n);
     currentArray = randomArray(n);
     renderIdle();
     updateTargetChip();
+    els.status.textContent = `${n} elements — press ${els.sort.textContent} to run the algorithm`;
   }
 
   codePanel.highlight(null);
@@ -478,30 +896,89 @@ async function loadAlgorithm(name) {
   els.barsBox.classList.toggle("hidden", isGraph || isTree || isFlow || isMatching || is2DDP || isGreedyTimelineOrKnapsack);
   els.treeBox.classList.toggle("hidden", isGraph || isTree || isFlow || isMatching || is2DDP || isGreedyTimelineOrKnapsack || !showTree);
 
+  if (showTree && els.treeHeader) {
+    els.treeHeader.textContent = `Recursion · ${detail.display_name}`;
+  }
+
   els.targetGroup.classList.toggle("hidden", !isSearchOrTarget);
   els.startNodeGroup.classList.toggle("hidden", !isGraph);
   els.targetNodeGroup.classList.toggle("hidden", !isGraph || detail.name === "tsp");
   els.treeKeyGroup.classList.toggle("hidden", !isTree || isHuffman || detail.name === "dsw_rebalance" || detail.name === "min_heap_extract");
 
-  // Set action button text
-  if (detail.name === "fractional_knapsack") els.sort.textContent = "Pack Knapsack";
-  else if (detail.name === "activity_selection") els.sort.textContent = "Select Activities";
-  else if (detail.name === "job_sequencing") els.sort.textContent = "Schedule Jobs";
-  else if (detail.name === "huffman_coding") els.sort.textContent = "Build Huffman Tree";
-  else if (detail.name === "coin_change_greedy") { els.sort.textContent = "Make Change"; els.targetInput.value = "67"; }
-  else if (detail.name === "knapsack_01") els.sort.textContent = "Fill 0-1 Table";
-  else if (detail.name === "lcs") els.sort.textContent = "Find LCS";
-  else if (detail.name === "min_path_sum") els.sort.textContent = "Find Min Path";
-  else if (detail.name === "three_sum") { els.sort.textContent = "Find 3-Sum"; els.targetInput.value = "0"; }
-  else if (detail.name === "four_sum") { els.sort.textContent = "Find 4-Sum"; els.targetInput.value = "0"; }
-  else if (detail.name === "fibonacci") els.sort.textContent = "Compute Fibonacci";
-  else if (detail.name === "lis") els.sort.textContent = "Find LIS";
-  else if (detail.name === "coin_change_dp") { els.sort.textContent = "Min Coins DP"; els.targetInput.value = "18"; }
-  else if (isMatching) els.sort.textContent = "Find Stable Matching";
-  else if (isFlow) els.sort.textContent = "Find Max Flow";
-  else if (isGraph) els.sort.textContent = detail.name === "tsp" ? "Find Tour" : "Find Path";
-  else if (isTree) els.sort.textContent = detail.name.includes("insert") ? "Insert & Balance" : "Run";
-  else els.sort.textContent = isSearchOrTarget ? "Search" : "Sort";
+  // Specific view & preset initialization
+  if (isTree && !isHuffman) {
+    if (detail.name === "avl_insert") {
+      els.sort.textContent = "Insert & Balance";
+      els.treeKeyInput.value = "53";
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_AVL_TREE));
+    } else if (detail.name === "avl_delete") {
+      els.sort.textContent = "Delete & Balance";
+      els.treeKeyInput.value = "25";
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_AVL_TREE));
+    } else if (detail.name === "rb_insert") {
+      els.sort.textContent = "Insert & Recolor";
+      els.treeKeyInput.value = "40";
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_RB_TREE));
+    } else if (detail.name === "min_heap_insert") {
+      els.sort.textContent = "Insert & Sift-Up";
+      els.treeKeyInput.value = "5";
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_HEAP_TREE));
+    } else if (detail.name === "min_heap_extract") {
+      els.sort.textContent = "Extract-Min";
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_HEAP_TREE));
+    } else {
+      els.sort.textContent = "Rebalance Tree";
+      currentTree = JSON.parse(JSON.stringify(DEFAULT_UNBALANCED_TREE));
+    }
+    bstRenderer.setTree(currentTree);
+  } else if (isHuffman) {
+    els.sort.textContent = "Build Huffman Tree";
+  } else if (isMatching) {
+    els.sort.textContent = "Find Stable Matching";
+    currentPreferences = DEFAULT_MATCHING_PREFS;
+    matchingRenderer.setPreferences(currentPreferences);
+  } else if (isFlow) {
+    els.sort.textContent = "Find Max Flow";
+    currentNetwork = DEFAULT_FLOW_NETWORK;
+    flowRenderer.setNetwork(currentNetwork);
+  } else if (isGraph) {
+    els.sort.textContent = detail.name === "tsp" ? "Find Tour" : "Find Path";
+    if (!currentGraph) {
+      currentGraph = JSON.parse(JSON.stringify(DEFAULT_GRAPH));
+    }
+    updateNodeSelects();
+    graphRenderer.setGraph(currentGraph, els.startNodeSelect.value, els.targetNodeSelect.value);
+  } else if (detail.name === "fractional_knapsack") {
+    els.sort.textContent = "Pack Knapsack";
+  } else if (detail.name === "activity_selection") {
+    els.sort.textContent = "Select Activities";
+  } else if (detail.name === "job_sequencing") {
+    els.sort.textContent = "Schedule Jobs";
+  } else if (detail.name === "coin_change_greedy") {
+    els.sort.textContent = "Make Change";
+    els.targetInput.value = "67";
+  } else if (detail.name === "knapsack_01") {
+    els.sort.textContent = "Fill 0-1 Table";
+  } else if (detail.name === "lcs") {
+    els.sort.textContent = "Find LCS";
+  } else if (detail.name === "min_path_sum") {
+    els.sort.textContent = "Find Min Path";
+  } else if (detail.name === "three_sum") {
+    els.sort.textContent = "Find 3-Sum";
+    els.targetInput.value = "0";
+  } else if (detail.name === "four_sum") {
+    els.sort.textContent = "Find 4-Sum";
+    els.targetInput.value = "0";
+  } else if (detail.name === "fibonacci") {
+    els.sort.textContent = "Compute Fibonacci";
+  } else if (detail.name === "lis") {
+    els.sort.textContent = "Find LIS";
+  } else if (detail.name === "coin_change_dp") {
+    els.sort.textContent = "Min Coins DP";
+    els.targetInput.value = "18";
+  } else {
+    els.sort.textContent = detail.category === "searching" ? "Search" : "Sort";
+  }
 
   updateTargetChip();
   resizeViews();
@@ -532,10 +1009,19 @@ function startSort() {
   else if (algo.category === "flow") netData = currentNetwork || DEFAULT_FLOW_NETWORK;
   else if (algo.category === "tree") {
     treeData = currentTree;
-    keyVal = Number(els.treeKeyInput.value) || 53;
+    keyVal = Number(els.treeKeyInput.value) || (algo.name === "avl_insert" ? 53 : 25);
   } else if (algo.category === "graph") {
     start = els.startNodeSelect.value || "A";
     target = algo.name === "tsp" ? null : (els.targetNodeSelect.value || "J");
+    graphRenderer.startNode = start;
+    graphRenderer.targetNode = target;
+    graphRenderer.render();
+  } else {
+    if (algo.needs_sorted_input) {
+      arr = [...currentArray].sort((a, b) => a - b);
+      currentArray = arr;
+      renderIdle();
+    }
   }
 
   sortInFlight = true;
@@ -549,7 +1035,7 @@ function startSort() {
   const myId = ++requestId;
   api.requestSort(
     els.algoSelect.value,
-    arr,
+    (algo.category === "graph" || algo.category === "tree" || algo.category === "flow" || algo.category === "matching" || ["knapsack_01", "lcs", "min_path_sum", "fractional_knapsack", "activity_selection", "job_sequencing", "huffman_coding"].includes(algo.name)) ? null : arr,
     myId,
     target,
     algo.category === "graph" ? currentGraph : null,
@@ -610,6 +1096,14 @@ function wireControls() {
     graphRenderer.targetNode = els.targetNodeSelect.value;
     graphRenderer.render();
   });
+
+  graphRenderer.onGraphChange = (updatedGraph) => {
+    currentGraph = updatedGraph;
+  };
+
+  flowRenderer.onNetworkChange = (updatedNet) => {
+    currentNetwork = updatedNet;
+  };
 
   els.sizeSlider.addEventListener("input", () => {
     els.sizeLabel.textContent = els.sizeSlider.value;
