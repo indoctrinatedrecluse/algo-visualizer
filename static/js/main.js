@@ -715,6 +715,23 @@ function updateNodeSelects() {
   graphRenderer.targetNode = els.targetNodeSelect.value;
 }
 
+function clearVisualizerState() {
+  player.pause();
+  player.frames = [];
+  player.index = -1;
+  player.accum = 0;
+  player.cumSorted = [];
+  player.cumStats = [];
+  setPlayLabel();
+
+  bstRenderer.currentFrame = null;
+  graphRenderer.currentFrame = null;
+  flowRenderer.currentFrame = null;
+  matchingRenderer.currentFrame = null;
+  dpRenderer.currentFrame = null;
+  greedyRenderer.currentFrame = null;
+}
+
 function randomize() {
   const isMatching = currentAlgo?.category === "matching";
   const isGraph = currentAlgo?.category === "graph";
@@ -722,10 +739,7 @@ function randomize() {
   const isFlow = currentAlgo?.category === "flow";
   const name = currentAlgo?.name;
 
-  player.frames = [];
-  player.index = -1;
-  player.playing = false;
-  setPlayLabel();
+  clearVisualizerState();
 
   if (name === "fractional_knapsack") {
     const count = 6;
@@ -910,6 +924,7 @@ function updateTargetChip() {
 }
 
 async function loadAlgorithm(name) {
+  clearVisualizerState();
   const detail = await api.getAlgorithm(name);
   codePanel.setSource(detail.source, detail.start_line);
   renderDescription(detail);
@@ -1027,6 +1042,11 @@ async function loadAlgorithm(name) {
 // ---- Execution via WebSocket ---------------------------------------------
 function startSort() {
   if (sortInFlight) return;
+  player.pause();
+  player.frames = [];
+  player.index = -1;
+  player.accum = 0;
+  setPlayLabel();
 
   const algo = currentAlgo || {};
   let arr = currentArray;

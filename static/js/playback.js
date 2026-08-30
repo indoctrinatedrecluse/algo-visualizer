@@ -150,9 +150,10 @@ export class Player {
   skipEnd() {
     if (this.frames.length) {
       this.index = this.frames.length - 1;
+      this.accum = 0;
       this.playing = false;
-      this.onEnd?.();
       this.renderFrame();
+      this.onEnd?.();
     }
   }
 
