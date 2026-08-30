@@ -19,14 +19,20 @@ from .greedy_utils import get_default_huffman_frequencies
 
 
 class HuffmanNode:
+    _seq_counter = 0
+
     def __init__(self, char: str | None, freq: int, left: HuffmanNode | None = None, right: HuffmanNode | None = None):
+        HuffmanNode._seq_counter += 1
+        self.seq = HuffmanNode._seq_counter
         self.char = char
-        self.freq = freq
+        self.freq = int(freq)
         self.left = left
         self.right = right
 
     def __lt__(self, other: HuffmanNode) -> bool:
-        return self.freq < other.freq
+        if self.freq != other.freq:
+            return self.freq < other.freq
+        return self.seq < other.seq
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -38,17 +44,39 @@ class HuffmanNode:
         }
 
 
-def huffman_coding(frequencies: dict[str, int] | None = None):
-    """Huffman Coding generator: merges lowest frequency subtrees into optimal prefix tree."""
-    if frequencies is None:
-        frequencies = get_default_huffman_frequencies()
+def normalize_frequencies(frequencies: Any) -> dict[str, int]:
+    """Convert any user input format (dict, list of ints, list of dicts, str) into a clean frequency map."""
+    if not frequencies:
+        return get_default_huffman_frequencies()
+    if isinstance(frequencies, dict):
+        return {str(k): int(v) for k, v in frequencies.items() if v is not None}
+    if isinstance(frequencies, list):
+        if not frequencies:
+            return get_default_huffman_frequencies()
+        if all(isinstance(x, dict) and "freq" in x for x in frequencies):
+            return {str(x.get("char", chr(65 + i))): int(x["freq"]) for i, x in enumerate(frequencies)}
+        if all(isinstance(x, (int, float)) for x in frequencies):
+            return {chr(65 + i): int(x) for i, x in enumerate(frequencies)}
+        if all(isinstance(x, str) for x in frequencies):
+            counts: dict[str, int] = {}
+            for ch in frequencies:
+                counts[ch] = counts.get(ch, 0) + 1
+            return counts
+    return get_default_huffman_frequencies()
 
-    heap: list[HuffmanNode] = [HuffmanNode(char, freq) for char, freq in frequencies.items()]
+
+def huffman_coding(frequencies: Any = None):
+    """Huffman Coding generator: merges lowest frequency subtrees into optimal prefix tree."""
+    freq_map = normalize_frequencies(frequencies)
+    if not freq_map:
+        freq_map = get_default_huffman_frequencies()
+
+    heap: list[HuffmanNode] = [HuffmanNode(char, freq) for char, freq in freq_map.items()]
     heapq.heapify(heap)
 
     yield Step(
         COMPARE,
-        message=f"Initialize Huffman forest with {len(frequencies)} character frequencies: {', '.join([f'{c}:{f}' for c, f in frequencies.items()])}",
+        message=f"Initialize Huffman forest with {len(freq_map)} character frequencies: {', '.join([f'{c}:{f}' for c, f in freq_map.items()])}",
         state={"forest_size": len(heap)},
     )
 

@@ -418,6 +418,8 @@ const DEFAULT_GRID_MATRIX = [
   [2, 1, 3, 2, 1],
 ];
 
+const DEFAULT_HUFFMAN_FREQS = { "A": 45, "B": 13, "C": 12, "D": 16, "E": 9, "F": 5 };
+
 // ---- Playback engine -----------------------------------------------------
 const player = new Player((frame, prev, progress, sortedFlags) => {
   if (frame.dp_table) {
@@ -820,6 +822,15 @@ function randomize() {
     updateTargetChip();
     renderIdle();
     els.status.textContent = `DP Coin Change for 18¢ — press ${els.sort.textContent}`;
+  } else if (name === "huffman_coding") {
+    currentCustomData = JSON.parse(JSON.stringify(DEFAULT_HUFFMAN_FREQS));
+    bstRenderer.setTree({
+      val: 100,
+      label: "Huffman Forest",
+      left: { val: 45, label: "A:45", color: "RED" },
+      right: { val: 55, label: "Subtree:55", color: "BLACK", left: { val: 13, label: "B:13", color: "RED" }, right: { val: 12, label: "C:12", color: "RED" } },
+    });
+    els.status.textContent = `Huffman frequencies loaded (${Object.keys(currentCustomData).length} characters) — press ${els.sort.textContent}`;
   } else if (isMatching) {
     currentPreferences = randomPreferences(6);
     matchingRenderer.setPreferences(currentPreferences);
@@ -1033,6 +1044,7 @@ function startSort() {
   else if (algo.name === "knapsack_01") customData = currentCustomData || DEFAULT_01_KNAPSACK;
   else if (algo.name === "lcs") customData = currentCustomData || ["ABCBDAB", "BDCABA"];
   else if (algo.name === "min_path_sum") customData = currentCustomData || DEFAULT_GRID_MATRIX;
+  else if (algo.name === "huffman_coding") customData = currentCustomData || DEFAULT_HUFFMAN_FREQS;
   else if (algo.category === "matching") matchData = currentPreferences || DEFAULT_MATCHING_PREFS;
   else if (algo.category === "flow") netData = currentNetwork || DEFAULT_FLOW_NETWORK;
   else if (algo.category === "tree") {
