@@ -4,6 +4,14 @@
 // coordinates, smooth connecting branches, balance factor badges (bf),
 // height tags (h), rotation indicators, and interactive step highlights.
 
+function drawRoundRect(c, x, y, w, h, r = 3) {
+  if (typeof c.roundRect === "function") {
+    c.roundRect(x, y, w, h, r);
+  } else {
+    c.rect(x, y, w, h);
+  }
+}
+
 export class BSTRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -17,9 +25,10 @@ export class BSTRenderer {
   resize() {
     if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
+    const parentRect = this.canvas.parentElement ? this.canvas.parentElement.getBoundingClientRect() : rect;
     const dpr = window.devicePixelRatio || 1;
-    const w = Math.max(300, Math.floor(rect.width || 700));
-    const h = Math.max(260, Math.floor(rect.height || 340));
+    const w = Math.max(300, Math.floor(rect.width || parentRect.width || 700));
+    const h = Math.max(260, Math.floor(rect.height || parentRect.height || 340));
     this.canvas.width = Math.floor(w * dpr);
     this.canvas.height = Math.floor(h * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -147,13 +156,7 @@ export class BSTRenderer {
     // 3. Draw Nodes & Badges
     const highlights = this.currentFrame?.highlight_nodes || {};
     const activeVal = this.currentFrame?.active_val;
-    function drawRoundRect(c, x, y, w, h, r = 3) {
-      if (typeof c.roundRect === "function") {
-        c.roundRect(x, y, w, h, r);
-      } else {
-        c.rect(x, y, w, h);
-      }
-    }
+    const radius = Math.max(14, Math.min(20, Math.floor(availW / (totalNodes * 2.2))));
 
     function drawNodes(node) {
       if (!node) return;
@@ -229,7 +232,8 @@ export class BSTRenderer {
       ctx.font = `bold ${Math.max(10, radius * 0.75)}px -apple-system, BlinkMacSystemFont, monospace`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(String(node.val), p.x, p.y);
+      const nodeText = node.label ? String(node.label) : String(node.val);
+      ctx.fillText(nodeText, p.x, p.y);
 
       // Balance Factor / Color Badge
       if (node.color) {
@@ -317,7 +321,7 @@ export class BSTRenderer {
       ctx.strokeStyle = "#c084fc";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(w / 2 - bw / 2, 10, bw, bh, 6);
+      drawRoundRect(ctx, w / 2 - bw / 2, 10, bw, bh, 6);
       ctx.fill();
       ctx.stroke();
 

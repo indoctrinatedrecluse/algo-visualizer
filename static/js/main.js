@@ -868,13 +868,17 @@ function randomize() {
 // ---- Algorithm loading ---------------------------------------------------
 function renderDescription(detail) {
   els.algoName.textContent = detail.display_name;
-  const c = detail.complexity;
+  const c = detail.complexity || {};
+  const best = c.best || "—";
+  const avg = c.average || "—";
+  const worst = c.worst || "—";
+  const space = c.space || "—";
   const stability = detail.category === "sorting"
     ? ` · ${detail.stable ? "Stable" : "Unstable"}`
     : "";
   els.algoComplexity.textContent =
-    `Best ${c.best} · Avg ${c.average} · Worst ${c.worst} · Space ${c.space}${stability}`;
-  els.algoComplexity.title = "Time / space complexity";
+    `Time: Best ${best} | Avg ${avg} | Worst ${worst} · Space: ${space}${stability}`;
+  els.algoComplexity.title = "Time & Space complexity bounds";
   els.algoDesc.textContent = detail.description;
 }
 
@@ -1146,6 +1150,11 @@ function wireControls() {
   els.algoSelect.addEventListener("change", async () => {
     await loadAlgorithm(els.algoSelect.value);
   });
+  els.algoSelect.addEventListener("input", async () => {
+    if (currentAlgo?.name !== els.algoSelect.value) {
+      await loadAlgorithm(els.algoSelect.value);
+    }
+  });
 
   els.startNodeSelect.addEventListener("change", () => {
     graphRenderer.startNode = els.startNodeSelect.value;
@@ -1236,6 +1245,7 @@ async function init() {
     { key: "flow", label: "Network Flow Algorithms" },
   ];
 
+  els.algoSelect.innerHTML = "";
   for (const cat of categories) {
     const group = algorithms.filter((a) => a.category === cat.key);
     if (!group.length) continue;
@@ -1250,7 +1260,10 @@ async function init() {
     els.algoSelect.appendChild(optGroup);
   }
 
-  await loadAlgorithm(algorithms[0].name);
+  // Set the dropdown to bubble_sort explicitly and load it on app launch
+  const initialAlgo = "bubble_sort";
+  els.algoSelect.value = initialAlgo;
+  await loadAlgorithm(initialAlgo);
   wireControls();
   player.setSpeed(Number(els.speedSlider.value));
   resizeViews();
